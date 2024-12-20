@@ -593,9 +593,24 @@ public class Executor {
                 case Opcodes.RET:
                     throw new UnsupportedOperationException(currentInstruction.getClass().getSimpleName() + " " + opcode); //TODO
                 case Opcodes.TABLESWITCH:
-                    throw new UnsupportedOperationException(currentInstruction.getClass().getSimpleName() + " " + opcode); //TODO
+                    TableSwitchInsnNode tableSwitchInsnNode = (TableSwitchInsnNode) currentInstruction;
+                    int1 = stack.pop(StackInt.class);
+                    if (int1.value() >= tableSwitchInsnNode.min && int1.value() <= tableSwitchInsnNode.max) {
+                        currentInstruction = tableSwitchInsnNode.labels.get(int1.value() - tableSwitchInsnNode.min);
+                    } else {
+                        currentInstruction = tableSwitchInsnNode.dflt;
+                    }
+                    continue EXECUTION;
                 case Opcodes.LOOKUPSWITCH:
-                    throw new UnsupportedOperationException(currentInstruction.getClass().getSimpleName() + " " + opcode); //TODO
+                    LookupSwitchInsnNode lookupSwitchInsnNode = (LookupSwitchInsnNode) currentInstruction;
+                    int1 = stack.pop(StackInt.class);
+                    int caseIndex = lookupSwitchInsnNode.keys.indexOf(int1.value());
+                    if (caseIndex != -1) {
+                        currentInstruction = lookupSwitchInsnNode.labels.get(caseIndex);
+                    } else {
+                        currentInstruction = lookupSwitchInsnNode.dflt;
+                    }
+                    continue EXECUTION;
                 case Opcodes.IRETURN:
                     returnValue = stack.pop(StackInt.class);
                     break EXECUTION;
