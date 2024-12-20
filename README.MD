@@ -1,4 +1,4 @@
-# GradleTemplate
+# MiniJVM
 A small and simple JVM written in Java made for sandboxing basic untrusted code.\
 It was mainly written to run basic code snippets to make deobfuscation easier (e.g. running string decryption code).\
 The project is still in a very early stage and not feature complete.
@@ -18,6 +18,8 @@ The project is written using Java 17, but should be able to run code compiled wi
 - Running large Java applications
 
 ## Usage
+> There are no public releases yet, so you have to build the project yourself if you want to toy around with it.
+
 To use `MiniJVM` using [Gradle](#gradle)/[Maven](#maven) you can add it as a dependency to your project.\
 The latest version can be found in the [releases](https://github.com/Lenni0451/MiniJVM/releases).\
 My libraries are hosted on [Maven Central](https://mvnrepository.com/artifact/net.lenni0451/MiniJVM) or my own [maven server](https://maven.lenni0451.net/).
