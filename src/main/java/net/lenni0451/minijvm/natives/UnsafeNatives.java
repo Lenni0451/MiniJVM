@@ -22,11 +22,15 @@ public class UnsafeNatives implements Consumer<ExecutionManager> {
             Type type = Type.getType(clazz.getClassNode().name);
             type = type.getElementType();
             return new StackInt(switch (type.getSort()) {
-                case Type.BOOLEAN, Type.BYTE -> 1;
-                case Type.CHAR, Type.SHORT -> 2;
-                case Type.INT, Type.FLOAT -> 4;
-                case Type.LONG, Type.DOUBLE -> 8;
-                default -> 4;
+                case Type.BOOLEAN -> 1;
+                case Type.BYTE -> Byte.BYTES;
+                case Type.SHORT -> Short.BYTES;
+                case Type.CHAR -> Character.BYTES;
+                case Type.INT -> Integer.BYTES;
+                case Type.LONG -> Long.BYTES;
+                case Type.FLOAT -> Float.BYTES;
+                case Type.DOUBLE -> Double.BYTES;
+                default -> 4; //Address size
             });
         });
     }
