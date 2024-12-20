@@ -438,41 +438,31 @@ public class Executor {
                 case Opcodes.LCMP:
                     long1 = stack.pop(StackLong.class);
                     long2 = stack.pop(StackLong.class);
-                    if (long1.value() == long2.value()) stack.push(new StackInt(0));
-                    else if (long1.value() > long2.value()) stack.push(new StackInt(1));
-                    else stack.push(new StackInt(-1));
+                    stack.push(new StackInt(Long.compare(long2.value(), long1.value())));
                     break;
                 case Opcodes.FCMPL:
                     float1 = stack.pop(StackFloat.class);
                     float2 = stack.pop(StackFloat.class);
                     if (Float.isNaN(float1.value()) || Float.isNaN(float2.value())) stack.push(new StackInt(-1));
-                    else if (float1.value() == float2.value()) stack.push(new StackInt(0));
-                    else if (float1.value() > float2.value()) stack.push(new StackInt(1));
-                    else stack.push(new StackInt(-1));
+                    stack.push(new StackInt(Float.compare(float2.value(), float1.value())));
                     break;
                 case Opcodes.FCMPG:
                     float1 = stack.pop(StackFloat.class);
                     float2 = stack.pop(StackFloat.class);
                     if (Float.isNaN(float1.value()) || Float.isNaN(float2.value())) stack.push(new StackInt(1));
-                    else if (float1.value() == float2.value()) stack.push(new StackInt(0));
-                    else if (float1.value() > float2.value()) stack.push(new StackInt(1));
-                    else stack.push(new StackInt(-1));
+                    stack.push(new StackInt(Float.compare(float2.value(), float1.value())));
                     break;
                 case Opcodes.DCMPL:
                     double1 = stack.pop(StackDouble.class);
                     double2 = stack.pop(StackDouble.class);
                     if (Double.isNaN(double1.value()) || Double.isNaN(double2.value())) stack.push(new StackInt(-1));
-                    else if (double1.value() == double2.value()) stack.push(new StackInt(0));
-                    else if (double1.value() > double2.value()) stack.push(new StackInt(1));
-                    else stack.push(new StackInt(-1));
+                    stack.push(new StackInt(Double.compare(double2.value(), double1.value())));
                     break;
                 case Opcodes.DCMPG:
                     double1 = stack.pop(StackDouble.class);
                     double2 = stack.pop(StackDouble.class);
                     if (Double.isNaN(double1.value()) || Double.isNaN(double2.value())) stack.push(new StackInt(1));
-                    else if (double1.value() == double2.value()) stack.push(new StackInt(0));
-                    else if (double1.value() > double2.value()) stack.push(new StackInt(1));
-                    else stack.push(new StackInt(-1));
+                    stack.push(new StackInt(Double.compare(double2.value(), double1.value())));
                     break;
                 case Opcodes.IFEQ:
                     JumpInsnNode jumpInsnNode = (JumpInsnNode) currentInstruction;

@@ -86,7 +86,7 @@ public class ExecutionContext {
             String fileName = this.executorClass.getClassNode().sourceFile;
             String className = this.executorClass.getClassNode().name;
             String methodName = this.methodNode.name;
-            return className + "." + methodName + (this.isNativeMethod() ? "(Native Method)" : (fileName != null && this.lineNumber >= 0 ? "(" + fileName + ":" + this.lineNumber + ")" : (fileName != null ? "(" + fileName + ")" : "(Unknown Source)")));
+            return className + "." + methodName + this.methodNode.desc + (this.isNativeMethod() ? "(Native Method)" : (fileName != null && this.lineNumber >= 0 ? "(" + fileName + ":" + this.lineNumber + ")" : (fileName != null ? "(" + fileName + ")" : "(Unknown Source)")));
         }
     }
 
