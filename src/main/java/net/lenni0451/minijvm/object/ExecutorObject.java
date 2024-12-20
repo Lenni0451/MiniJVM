@@ -1,8 +1,8 @@
 package net.lenni0451.minijvm.object;
 
 import net.lenni0451.commons.asm.Modifiers;
-import net.lenni0451.minijvm.ExecutionContext;
 import net.lenni0451.minijvm.ExecutionManager;
+import net.lenni0451.minijvm.context.ExecutionContext;
 import net.lenni0451.minijvm.stack.StackElement;
 import net.lenni0451.minijvm.stack.StackObject;
 import net.lenni0451.minijvm.utils.ExecutorTypeUtils;

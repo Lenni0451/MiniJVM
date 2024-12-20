@@ -1,7 +1,8 @@
 package net.lenni0451.minijvm;
 
 import net.lenni0451.commons.asm.Modifiers;
-import net.lenni0451.minijvm.ExecutionContext.StackFrame;
+import net.lenni0451.minijvm.context.ExecutionContext;
+import net.lenni0451.minijvm.context.ExecutionContext.StackFrame;
 import net.lenni0451.minijvm.exception.ExecutorException;
 import net.lenni0451.minijvm.natives.NativeExecutor;
 import net.lenni0451.minijvm.object.ArrayObject;
@@ -682,6 +683,10 @@ public class Executor {
                         stackElements.add(0, argumentType);
                     }
                     StackElement ownerElement = stack.pop(StackObject.class);
+                    if (ownerElement == StackObject.NULL) {
+                        //TODO: Throw internal exception
+                        throw new ExecutorException(executionContext, "Tried to invoke method on null object");
+                    }
                     ExecutorObject ownerObject = ((StackObject) ownerElement).value();
                     //TODO: Interface checks
                     ResolvedMethod methodNode;

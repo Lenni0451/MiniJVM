@@ -2,9 +2,14 @@ package net.lenni0451.minijvm.natives;
 
 import net.lenni0451.minijvm.ExecutionManager;
 import net.lenni0451.minijvm.object.ClassClass;
+import net.lenni0451.minijvm.object.ExecutorClass;
 import net.lenni0451.minijvm.stack.StackInt;
+import net.lenni0451.minijvm.stack.StackLong;
 import net.lenni0451.minijvm.stack.StackObject;
+import net.lenni0451.minijvm.utils.ExecutorTypeUtils;
+import net.lenni0451.minijvm.utils.UnsafeUtils;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.FieldNode;
 
 import java.util.function.Consumer;
 
@@ -32,6 +37,14 @@ public class UnsafeNatives implements Consumer<ExecutionManager> {
                 case Type.DOUBLE -> Double.BYTES;
                 default -> 4; //Address size
             });
+        });
+        manager.registerNativeExecutor("jdk/internal/misc/Unsafe.objectFieldOffset1(Ljava/lang/Class;Ljava/lang/String;)J", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
+            //TODO: Exceptions
+            ClassClass classClass = (ClassClass) ((StackObject) arguments[0]).value().getOwner();
+            ExecutorClass executorClass = executionManager.loadClass(executionContext, classClass.getClassNode().name);
+            String fieldName = ExecutorTypeUtils.fromExecutorString(executionManager, executionContext, ((StackObject) arguments[1]).value());
+            FieldNode fieldNode = UnsafeUtils.getFieldByName(executorClass, fieldName);
+            return new StackLong(UnsafeUtils.getFieldHashCode(fieldNode));
         });
     }
 

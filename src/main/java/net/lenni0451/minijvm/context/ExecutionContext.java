@@ -1,10 +1,13 @@
-package net.lenni0451.minijvm;
+package net.lenni0451.minijvm.context;
 
 import net.lenni0451.minijvm.object.ExecutorClass;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * This class is used to manage the current state of the executor.
@@ -12,10 +15,12 @@ import java.util.List;
 public class ExecutionContext {
 
     private final List<StackFrame> stackFrames;
+    private final Map<ContextKey<?>, Object> contextData;
     private boolean shouldRun = true;
 
     public ExecutionContext() {
         this.stackFrames = new ArrayList<>();
+        this.contextData = new HashMap<>();
     }
 
     public StackFrame[] getStackFrames() {
@@ -30,6 +35,10 @@ public class ExecutionContext {
 
     public StackFrame popStackFrame() {
         return this.stackFrames.remove(this.stackFrames.size() - 1);
+    }
+
+    public <T> T getContextData(final ContextKey<T> contextKey, final Supplier<T> initializer) {
+        return (T) this.contextData.computeIfAbsent(contextKey, key -> initializer.get());
     }
 
     public boolean shouldRun() {

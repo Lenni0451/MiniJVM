@@ -2,6 +2,7 @@ package net.lenni0451.minijvm;
 
 import lombok.SneakyThrows;
 import net.lenni0451.commons.asm.provider.ClassProvider;
+import net.lenni0451.minijvm.context.ExecutionContext;
 import net.lenni0451.minijvm.natives.*;
 import net.lenni0451.minijvm.object.*;
 import net.lenni0451.minijvm.stack.StackElement;
@@ -41,6 +42,7 @@ public class ExecutionManager {
         this.accept(new ObjectNatives());
         this.accept(new RuntimeNatives());
         this.accept(new UnsafeNatives());
+        this.accept(new ReflectionNatives());
     }
 
     public void accept(final Consumer<ExecutionManager> consumer) {

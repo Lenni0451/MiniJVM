@@ -1,6 +1,6 @@
 package net.lenni0451.minijvm.exception;
 
-import net.lenni0451.minijvm.ExecutionContext;
+import net.lenni0451.minijvm.context.ExecutionContext;
 
 /**
  * An exception that is thrown when illegal operations are performed by the executed code.<br>

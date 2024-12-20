@@ -1,7 +1,7 @@
 package net.lenni0451.minijvm.object;
 
-import net.lenni0451.minijvm.ExecutionContext;
 import net.lenni0451.minijvm.ExecutionManager;
+import net.lenni0451.minijvm.context.ExecutionContext;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
