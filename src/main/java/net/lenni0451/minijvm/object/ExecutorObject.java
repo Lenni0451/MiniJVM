@@ -53,6 +53,6 @@ public class ExecutorObject {
 
     @Override
     public String toString() {
-        return "ExecutorObject{" + this.owner.getClassNode().name + "}";
+        return "ExecutorObject{" + this.owner + "}";
     }
 }

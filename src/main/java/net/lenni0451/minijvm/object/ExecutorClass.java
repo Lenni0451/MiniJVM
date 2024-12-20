@@ -104,6 +104,10 @@ public class ExecutorClass {
         throw new IllegalArgumentException("Field not found: " + field.name + ":" + field.desc);
     }
 
+    @Override
+    public String toString() {
+        return "ExecutorClass{" + this.classNode.name + "}";
+    }
 
     public record ResolvedField(ExecutorClass owner, FieldNode field) {
         public StackElement get() {

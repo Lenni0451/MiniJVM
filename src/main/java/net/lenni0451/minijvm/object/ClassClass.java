@@ -14,9 +14,13 @@ public class ClassClass extends ExecutorClass {
         return classNode;
     }
 
-
     public ClassClass(final ExecutionManager executionManager, final ExecutionContext executionContext, final Type type) {
         super(executionManager, executionContext, buildClass(type));
+    }
+
+    @Override
+    public String toString() {
+        return "ClassClass{" + this.getClassNode().name + "}";
     }
 
 }

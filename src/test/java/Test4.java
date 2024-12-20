@@ -20,7 +20,7 @@ public class Test4 {
     }
 
     public static double doit(final double a) {
-        return Math.sin(a);
+        return Math.fma(a, 2, 45);
     }
 
 }

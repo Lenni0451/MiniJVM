@@ -6,6 +6,7 @@ import net.lenni0451.minijvm.context.ExecutionContext;
 import net.lenni0451.minijvm.natives.*;
 import net.lenni0451.minijvm.object.*;
 import net.lenni0451.minijvm.stack.StackElement;
+import net.lenni0451.minijvm.stack.StackObject;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -43,6 +44,7 @@ public class ExecutionManager {
         this.accept(new RuntimeNatives());
         this.accept(new UnsafeNatives());
         this.accept(new ReflectionNatives());
+        this.accept(new ArrayNatives());
     }
 
     public void accept(final Consumer<ExecutionManager> consumer) {
@@ -89,7 +91,23 @@ public class ExecutionManager {
     }
 
     public ExecutorObject instantiate(final ExecutionContext executionContext, final ExecutorClass executorClass) {
-        return new ExecutorObject(this, executionContext, executorClass);
+        ExecutorObject object = new ExecutorObject(this, executionContext, executorClass);
+        if (executorClass instanceof ClassClass) {
+            ExecutorClass.ResolvedField classLoaderField = executorClass.findField("classLoader", "Ljava/lang/ClassLoader;");
+            if (classLoaderField != null) {
+                object.setField(classLoaderField.field(), StackObject.NULL);
+            }
+            ExecutorClass.ResolvedField componentTypeField = executorClass.findField("componentType", "Ljava/lang/Class;");
+            if (componentTypeField != null) {
+                if (executorClass.getClassNode().name.startsWith("[")) {
+                    ExecutorClass componentTypeClass = this.loadClassClass(executionContext, executorClass.getClassNode().name.substring(1));
+                    object.setField(componentTypeField.field(), new StackObject(this.instantiate(executionContext, componentTypeClass)));
+                } else {
+                    object.setField(componentTypeField.field(), StackObject.NULL);
+                }
+            }
+        }
+        return object;
     }
 
     public ExecutorObject instantiateArray(final ExecutionContext executionContext, final ExecutorClass executorClass, final int length) {
