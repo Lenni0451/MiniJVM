@@ -68,39 +68,21 @@ public class ExecutorClass {
     }
 
     @Nullable
-    public FieldNode findField(final String owner, final String name, final String descriptor) {
-        ExecutorClass executorClass = this.superClasses.get(owner);
-        if (executorClass == null) throw new IllegalArgumentException("Superclass not found: " + owner);
-        if (executorClass == this) {
-            FieldNode field = ASMUtils.getField(this.classNode, name, descriptor);
-            if (field != null) return field;
-            for (Map.Entry<String, ExecutorClass> entry : this.superClasses.entrySet()) {
-                if (entry.getValue() == this) continue;
-                field = ASMUtils.getField(entry.getValue().classNode, name, descriptor);
-                if (field != null) return field;
-            }
-            return null;
-        } else {
-            return executorClass.findField(owner, name, descriptor);
+    public ResolvedField findField(final String name, final String descriptor) {
+        for (Map.Entry<String, ExecutorClass> entry : this.superClasses.entrySet()) {
+            FieldNode field = ASMUtils.getField(entry.getValue().classNode, name, descriptor);
+            if (field != null) return new ResolvedField(entry.getValue(), field);
         }
+        return null;
     }
 
     @Nullable
-    public MethodNode findMethod(final String owner, final String name, final String descriptor) {
-        ExecutorClass executorClass = this.superClasses.get(owner);
-        if (executorClass == null) throw new IllegalArgumentException("Superclass not found: " + owner);
-        if (executorClass == this) {
-            MethodNode method = ASMUtils.getMethod(this.classNode, name, descriptor);
-            if (method != null) return method;
-            for (Map.Entry<String, ExecutorClass> entry : this.superClasses.entrySet()) {
-                if (entry.getValue() == this) continue;
-                method = ASMUtils.getMethod(entry.getValue().classNode, name, descriptor);
-                if (method != null) return method;
-            }
-            return null;
-        } else {
-            return executorClass.findMethod(owner, name, descriptor);
+    public ResolvedMethod findMethod(final String name, final String descriptor) {
+        for (Map.Entry<String, ExecutorClass> entry : this.superClasses.entrySet()) {
+            MethodNode method = ASMUtils.getMethod(entry.getValue().classNode, name, descriptor);
+            if (method != null && !Modifiers.has(method.access, Opcodes.ACC_ABSTRACT)) return new ResolvedMethod(entry.getValue(), method);
         }
+        return null;
     }
 
     public StackElement getStaticField(final FieldNode field) {
@@ -120,6 +102,20 @@ public class ExecutorClass {
             }
         }
         throw new IllegalArgumentException("Field not found: " + field.name + ":" + field.desc);
+    }
+
+
+    public record ResolvedField(ExecutorClass owner, FieldNode field) {
+        public StackElement get() {
+            return this.owner.getStaticField(this.field);
+        }
+
+        public void set(final StackElement element) {
+            this.owner.setStaticField(this.field, element);
+        }
+    }
+
+    public record ResolvedMethod(ExecutorClass owner, MethodNode method) {
     }
 
 }

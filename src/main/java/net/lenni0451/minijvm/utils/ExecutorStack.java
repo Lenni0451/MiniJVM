@@ -45,7 +45,7 @@ public class ExecutorStack {
     }
 
     public <T extends StackElement> T pop(final Class<T> expected) {
-        StackElement element = this.pop();
+        StackElement element = this.popSized();
         if (!expected.isInstance(element)) {
             throw new ExecutorException(this.executionContext, "Tried to pop " + expected.getSimpleName() + " but the top element is " + element.getClass().getSimpleName());
         }

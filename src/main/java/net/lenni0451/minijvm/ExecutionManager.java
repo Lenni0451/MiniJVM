@@ -39,6 +39,8 @@ public class ExecutionManager {
         this.accept(new DoubleNatives());
         this.accept(new CDSNatives());
         this.accept(new ObjectNatives());
+        this.accept(new RuntimeNatives());
+        this.accept(new UnsafeNatives());
     }
 
     public void accept(final Consumer<ExecutionManager> consumer) {

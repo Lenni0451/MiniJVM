@@ -51,4 +51,8 @@ public class ExecutorObject {
         this.fields.put(field, value);
     }
 
+    @Override
+    public String toString() {
+        return "ExecutorObject{" + this.owner.getClassNode().name + "}";
+    }
 }

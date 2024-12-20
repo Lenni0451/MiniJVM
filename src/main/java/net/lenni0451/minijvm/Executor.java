@@ -6,6 +6,8 @@ import net.lenni0451.minijvm.exception.ExecutorException;
 import net.lenni0451.minijvm.natives.NativeExecutor;
 import net.lenni0451.minijvm.object.ArrayObject;
 import net.lenni0451.minijvm.object.ExecutorClass;
+import net.lenni0451.minijvm.object.ExecutorClass.ResolvedField;
+import net.lenni0451.minijvm.object.ExecutorClass.ResolvedMethod;
 import net.lenni0451.minijvm.object.ExecutorObject;
 import net.lenni0451.minijvm.stack.*;
 import net.lenni0451.minijvm.utils.ExecutorStack;
@@ -625,17 +627,17 @@ public class Executor {
                 case Opcodes.PUTSTATIC:
                     FieldInsnNode fieldInsnNode = (FieldInsnNode) currentInstruction;
                     ExecutorClass owner = executionManager.loadClass(executionContext, fieldInsnNode.owner);
-                    FieldNode fieldNode = owner.findField(fieldInsnNode.owner, fieldInsnNode.name, fieldInsnNode.desc);
+                    ResolvedField fieldNode = owner.findField(fieldInsnNode.name, fieldInsnNode.desc);
                     if (fieldNode == null) {
                         //TODO: Throw internal exception
                         throw new ExecutorException(executionContext, "Field not found: " + fieldInsnNode.owner + " " + fieldInsnNode.name + " " + fieldInsnNode.desc);
                     }
                     if (opcode == Opcodes.GETSTATIC) {
-                        stack.push(owner.getStaticField(fieldNode));
+                        stack.push(fieldNode.get());
                     } else {
                         value = stack.popSized();
-                        verifyType(executionContext, value, ExecutorTypeUtils.typeToStackType(type(fieldNode)));
-                        owner.setStaticField(fieldNode, value);
+                        verifyType(executionContext, value, ExecutorTypeUtils.typeToStackType(type(fieldNode.field())));
+                        fieldNode.set(value);
                     }
                     break;
                 case Opcodes.GETFIELD:
@@ -645,12 +647,12 @@ public class Executor {
                         //TODO: Throw internal exception
                         throw new ExecutorException(executionContext, "Tried to access field of null object");
                     }
-                    fieldNode = object.value().getOwner().findField(fieldInsnNode.owner, fieldInsnNode.name, fieldInsnNode.desc);
+                    fieldNode = object.value().getOwner().findField(fieldInsnNode.name, fieldInsnNode.desc);
                     if (fieldNode == null) {
                         //TODO: Throw internal exception
                         throw new ExecutorException(executionContext, "Field not found: " + fieldInsnNode.owner + " " + fieldInsnNode.name + " " + fieldInsnNode.desc);
                     }
-                    stack.push(object.value().getField(fieldNode));
+                    stack.push(object.value().getField(fieldNode.field()));
                     break;
                 case Opcodes.PUTFIELD:
                     fieldInsnNode = (FieldInsnNode) currentInstruction;
@@ -660,13 +662,13 @@ public class Executor {
                         //TODO: Throw internal exception
                         throw new ExecutorException(executionContext, "Tried to access field of null object");
                     }
-                    fieldNode = object.value().getOwner().findField(fieldInsnNode.owner, fieldInsnNode.name, fieldInsnNode.desc);
+                    fieldNode = object.value().getOwner().findField(fieldInsnNode.name, fieldInsnNode.desc);
                     if (fieldNode == null) {
                         //TODO: Throw internal exception
                         throw new ExecutorException(executionContext, "Field not found: " + fieldInsnNode.owner + " " + fieldInsnNode.name + " " + fieldInsnNode.desc);
                     }
-                    verifyType(executionContext, value, ExecutorTypeUtils.typeToStackType(type(fieldNode)));
-                    object.value().setField(fieldNode, value);
+                    verifyType(executionContext, value, ExecutorTypeUtils.typeToStackType(type(fieldNode.field())));
+                    object.value().setField(fieldNode.field(), value);
                     break;
                 case Opcodes.INVOKEVIRTUAL:
                 case Opcodes.INVOKESPECIAL:
@@ -681,22 +683,25 @@ public class Executor {
                     }
                     StackElement ownerElement = stack.pop(StackObject.class);
                     ExecutorObject ownerObject = ((StackObject) ownerElement).value();
-                    ExecutorClass ownerClass = executionManager.loadClass(executionContext, methodInsnNode.owner);
-                    if (opcode == Opcodes.INVOKEINTERFACE && !Modifiers.has(ownerClass.getClassNode().access, Opcodes.ACC_INTERFACE)) {
-                        throw new ExecutorException(executionContext, "Tried to invoke interface method on non interface class");
+                    //TODO: Interface checks
+                    ResolvedMethod methodNode;
+                    if (opcode == Opcodes.INVOKESPECIAL) {
+                        ExecutorClass ownerClass = executionManager.loadClass(executionContext, methodInsnNode.owner);
+                        methodNode = ownerClass.findMethod(methodInsnNode.name, methodInsnNode.desc);
+                    } else {
+                        methodNode = ownerObject.getOwner().findMethod(methodInsnNode.name, methodInsnNode.desc);
                     }
-                    MethodNode methodNode = ownerClass.findMethod(methodInsnNode.owner, methodInsnNode.name, methodInsnNode.desc);
                     if (methodNode == null) {
                         //TODO: Throw internal exception
                         throw new ExecutorException(executionContext, "Method not found: " + methodInsnNode.owner + " " + methodInsnNode.name + " " + methodInsnNode.desc);
                     }
-                    if (Modifiers.has(methodNode.access, Opcodes.ACC_STATIC)) {
+                    if (Modifiers.has(methodNode.method().access, Opcodes.ACC_STATIC)) {
                         //TODO: Throw internal exception
                         throw new ExecutorException(executionContext, "Tried to invoke static method on instance");
                     }
-                    StackElement returnElement = Executor.execute(executionManager, executionContext, ownerClass, methodNode, ownerObject, stackElements.toArray(new StackElement[0]));
+                    StackElement returnElement = Executor.execute(executionManager, executionContext, methodNode.owner(), methodNode.method(), ownerObject, stackElements.toArray(new StackElement[0]));
                     if (returnElement != null) {
-                        verifyType(executionContext, returnElement, ExecutorTypeUtils.typeToStackType(returnType(methodNode)));
+                        verifyType(executionContext, returnElement, ExecutorTypeUtils.typeToStackType(returnType(methodNode.method())));
                         stack.push(returnElement);
                     }
                     break;
@@ -709,18 +714,18 @@ public class Executor {
                         verifyType(executionContext, argumentType, ExecutorTypeUtils.typeToStackType(argumentTypes[i]));
                         stackElements.add(0, argumentType);
                     }
-                    ownerClass = executionManager.loadClass(executionContext, methodInsnNode.owner);
-                    methodNode = ownerClass.findMethod(methodInsnNode.owner, methodInsnNode.name, methodInsnNode.desc);
+                    ExecutorClass ownerClass = executionManager.loadClass(executionContext, methodInsnNode.owner);
+                    methodNode = ownerClass.findMethod(methodInsnNode.name, methodInsnNode.desc);
                     if (methodNode == null) {
                         //TODO: Throw internal exception
                         throw new ExecutorException(executionContext, "Method not found: " + methodInsnNode.owner + " " + methodInsnNode.name + " " + methodInsnNode.desc);
                     }
-                    if (!Modifiers.has(methodNode.access, Opcodes.ACC_STATIC)) {
+                    if (!Modifiers.has(methodNode.method().access, Opcodes.ACC_STATIC)) {
                         throw new ExecutorException(executionContext, "Tried to invoke non static method as static");
                     }
-                    returnElement = Executor.execute(executionManager, executionContext, ownerClass, methodNode, null, stackElements.toArray(new StackElement[0]));
+                    returnElement = Executor.execute(executionManager, executionContext, methodNode.owner(), methodNode.method(), null, stackElements.toArray(new StackElement[0]));
                     if (returnElement != null) {
-                        verifyType(executionContext, returnElement, ExecutorTypeUtils.typeToStackType(returnType(methodNode)));
+                        verifyType(executionContext, returnElement, ExecutorTypeUtils.typeToStackType(returnType(methodNode.method())));
                         stack.push(returnElement);
                     }
                     break;

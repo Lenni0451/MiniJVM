@@ -12,13 +12,9 @@ import net.lenni0451.minijvm.stack.*;
 import org.objectweb.asm.ConstantDynamic;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.MethodNode;
 
 import javax.annotation.Nullable;
 import java.util.function.Supplier;
-
-import static net.lenni0451.commons.asm.Types.internalName;
 
 public class ExecutorTypeUtils {
 
@@ -37,8 +33,8 @@ public class ExecutorTypeUtils {
             ExecutorObject stringObject = executionManager.instantiate(executionContext, stringClass);
             if (s.isEmpty()) {
                 //TODO: Find out what to actually do with empty strings
-                FieldNode valueField = stringClass.findField(internalName(String.class), "value", "[B");
-                stringObject.setField(valueField, new StackObject(executionManager.instantiateArray(executionContext, executionManager.loadClass(executionContext, "[B"), new StackElement[0])));
+                ExecutorClass.ResolvedField valueField = stringClass.findField("value", "[B");
+                stringObject.setField(valueField.field(), new StackObject(executionManager.instantiateArray(executionContext, executionManager.loadClass(executionContext, "[B"), new StackElement[0])));
             } else {
                 char[] value = s.toCharArray();
                 StackElement[] valueArray = new StackElement[value.length];
@@ -49,7 +45,7 @@ public class ExecutorTypeUtils {
             }
             return new StackObject(stringObject);
         } else if (jvmObject instanceof Type t) {
-            ClassClass classClass = executionManager.loadClassClass(executionContext, t.getClassName());
+            ClassClass classClass = executionManager.loadClassClass(executionContext, t.getInternalName());
             ExecutorObject executorObject = executionManager.instantiate(executionContext, classClass);
             return new StackObject(executorObject);
         } else if (jvmObject instanceof Handle) {
@@ -95,8 +91,8 @@ public class ExecutorTypeUtils {
         if (!executorObject.getOwner().getClassNode().name.equals("java/lang/String")) {
             throw new IllegalArgumentException("The given executor object is not a string object");
         }
-        MethodNode toCharArray = executorObject.getOwner().findMethod("java/lang/String", "toCharArray", "()[C");
-        StackObject valueArray = (StackObject) Executor.execute(executionManager, executionContext, executorObject.getOwner(), toCharArray, executorObject, new StackElement[0]);
+        ExecutorClass.ResolvedMethod toCharArray = executorObject.getOwner().findMethod("toCharArray", "()[C");
+        StackObject valueArray = (StackObject) Executor.execute(executionManager, executionContext, toCharArray.owner(), toCharArray.method(), executorObject, new StackElement[0]);
         StringBuilder builder = new StringBuilder();
         for (StackElement element : ((ArrayObject) valueArray.value()).getElements()) {
             builder.append((char) ((StackInt) element).value());
