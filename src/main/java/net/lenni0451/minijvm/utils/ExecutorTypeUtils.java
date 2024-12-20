@@ -12,35 +12,44 @@ import net.lenni0451.minijvm.stack.*;
 import org.objectweb.asm.ConstantDynamic;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import javax.annotation.Nullable;
 import java.util.function.Supplier;
 
+import static net.lenni0451.commons.asm.Types.internalName;
+
 public class ExecutorTypeUtils {
 
     public static StackElement parse(final ExecutionManager executionManager, final ExecutionContext executionContext, final Object jvmObject) {
         if (jvmObject == null) return StackObject.NULL;
-        if (jvmObject instanceof Integer) {
-            return new StackInt((Integer) jvmObject);
-        } else if (jvmObject instanceof Long) {
-            return new StackLong((Long) jvmObject);
-        } else if (jvmObject instanceof Float) {
-            return new StackFloat((Float) jvmObject);
-        } else if (jvmObject instanceof Double) {
-            return new StackDouble((Double) jvmObject);
-        } else if (jvmObject instanceof String) {
+        if (jvmObject instanceof Integer i) {
+            return new StackInt(i);
+        } else if (jvmObject instanceof Long l) {
+            return new StackLong(l);
+        } else if (jvmObject instanceof Float f) {
+            return new StackFloat(f);
+        } else if (jvmObject instanceof Double d) {
+            return new StackDouble(d);
+        } else if (jvmObject instanceof String s) {
             ExecutorClass stringClass = executionManager.loadClass(executionContext, "java/lang/String");
             ExecutorObject stringObject = executionManager.instantiate(executionContext, stringClass);
-            char[] value = ((String) jvmObject).toCharArray();
-            StackElement[] valueArray = new StackElement[value.length];
-            for (int i = 0; i < value.length; i++) valueArray[i] = new StackInt(value[i]);
-            ExecutorClass arrayClass = executionManager.loadClass(executionContext, "[C");
-            ExecutorObject arrayObject = executionManager.instantiateArray(executionContext, arrayClass, valueArray);
-            Executor.execute(executionManager, executionContext, stringClass, ASMUtils.getMethod(stringClass.getClassNode(), "<init>", "([C)V"), stringObject, new StackElement[]{new StackObject(arrayObject)});
+            if (s.isEmpty()) {
+                //TODO: Find out what to actually do with empty strings
+                FieldNode valueField = stringClass.findField(internalName(String.class), "value", "[B");
+                stringObject.setField(valueField, new StackObject(executionManager.instantiateArray(executionContext, executionManager.loadClass(executionContext, "[B"), new StackElement[0])));
+            } else {
+                char[] value = s.toCharArray();
+                StackElement[] valueArray = new StackElement[value.length];
+                for (int i = 0; i < value.length; i++) valueArray[i] = new StackInt(value[i]);
+                ExecutorClass arrayClass = executionManager.loadClass(executionContext, "[C");
+                ExecutorObject arrayObject = executionManager.instantiateArray(executionContext, arrayClass, valueArray);
+                Executor.execute(executionManager, executionContext, stringClass, ASMUtils.getMethod(stringClass.getClassNode(), "<init>", "([C)V"), stringObject, new StackElement[]{new StackObject(arrayObject)});
+            }
             return new StackObject(stringObject);
-        } else if (jvmObject instanceof Type) {
-            ClassClass classClass = executionManager.loadClassClass(executionContext, ((Type) jvmObject).getClassName());
+        } else if (jvmObject instanceof Type t) {
+            ClassClass classClass = executionManager.loadClassClass(executionContext, t.getClassName());
             ExecutorObject executorObject = executionManager.instantiate(executionContext, classClass);
             return new StackObject(executorObject);
         } else if (jvmObject instanceof Handle) {

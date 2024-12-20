@@ -37,6 +37,8 @@ public class ExecutionManager {
         this.accept(new SystemNatives());
         this.accept(new FloatNatives());
         this.accept(new DoubleNatives());
+        this.accept(new CDSNatives());
+        this.accept(new ObjectNatives());
     }
 
     public void accept(final Consumer<ExecutionManager> consumer) {

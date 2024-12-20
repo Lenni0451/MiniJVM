@@ -63,6 +63,10 @@ public class ExecutorClass {
         return this.classNode;
     }
 
+    public boolean isInstance(final String className) {
+        return this.superClasses.containsKey(className);
+    }
+
     @Nullable
     public FieldNode findField(final String owner, final String name, final String descriptor) {
         ExecutorClass executorClass = this.superClasses.get(owner);

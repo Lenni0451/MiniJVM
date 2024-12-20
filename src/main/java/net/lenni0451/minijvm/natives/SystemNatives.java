@@ -4,6 +4,7 @@ import net.lenni0451.minijvm.ExecutionManager;
 import net.lenni0451.minijvm.object.ArrayObject;
 import net.lenni0451.minijvm.stack.StackElement;
 import net.lenni0451.minijvm.stack.StackInt;
+import net.lenni0451.minijvm.stack.StackLong;
 import net.lenni0451.minijvm.stack.StackObject;
 
 import java.util.function.Consumer;
@@ -26,6 +27,8 @@ public class SystemNatives implements Consumer<ExecutionManager> {
             System.arraycopy(srcArray, srcPos.value(), destArray, destPos.value(), length.value());
             return null;
         });
+        manager.registerNativeExecutor("java/lang/System.nanoTime()J", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> new StackLong(System.nanoTime()));
+        manager.registerNativeExecutor("java/lang/System.currentTimeMillis()J", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> new StackLong(System.currentTimeMillis()));
     }
 
 }

@@ -769,9 +769,18 @@ public class Executor {
                 case Opcodes.ATHROW:
                     throw new UnsupportedOperationException(currentInstruction.getClass().getSimpleName() + " " + opcode); //TODO
                 case Opcodes.CHECKCAST:
-                    throw new UnsupportedOperationException(currentInstruction.getClass().getSimpleName() + " " + opcode); //TODO
+                    //TODO: Type checks?
+                    break;
                 case Opcodes.INSTANCEOF:
-                    throw new UnsupportedOperationException(currentInstruction.getClass().getSimpleName() + " " + opcode); //TODO
+                    typeInsnNode = (TypeInsnNode) currentInstruction;
+                    object = stack.pop(StackObject.class);
+                    if (object == StackObject.NULL) {
+                        stack.push(new StackInt(0));
+                    } else {
+                        boolean isInstance = object.value().getOwner().isInstance(typeInsnNode.desc);
+                        stack.push(new StackInt(isInstance ? 1 : 0));
+                    }
+                    break;
                 case Opcodes.MONITORENTER:
                     throw new UnsupportedOperationException(currentInstruction.getClass().getSimpleName() + " " + opcode); //TODO
                 case Opcodes.MONITOREXIT:
