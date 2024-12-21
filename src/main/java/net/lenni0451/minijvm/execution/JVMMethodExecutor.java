@@ -781,9 +781,9 @@ public class JVMMethodExecutor implements MethodExecutor {
                     }
                     break;
                 case Opcodes.MONITORENTER:
-                    throw new UnsupportedOperationException(currentInstruction.getClass().getSimpleName() + " " + opcode); //TODO
+                    break; //TODO
                 case Opcodes.MONITOREXIT:
-                    throw new UnsupportedOperationException(currentInstruction.getClass().getSimpleName() + " " + opcode); //TODO
+                    break; //TODO
                 case Opcodes.MULTIANEWARRAY:
                     throw new UnsupportedOperationException(currentInstruction.getClass().getSimpleName() + " " + opcode); //TODO
                 case Opcodes.IFNULL:
