@@ -16,10 +16,8 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static net.lenni0451.commons.asm.Types.*;
 
@@ -789,8 +787,10 @@ public class JVMMethodExecutor implements MethodExecutor {
                     }
                     break;
                 case Opcodes.MONITORENTER:
+                    stack.popSized(); //The object to synchronize on
                     break; //TODO
                 case Opcodes.MONITOREXIT:
+                    stack.popSized(); //The object stop synchronizing on
                     break; //TODO
                 case Opcodes.MULTIANEWARRAY:
                     throw new UnsupportedOperationException(currentInstruction.getClass().getSimpleName() + " " + opcode); //TODO
