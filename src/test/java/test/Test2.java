@@ -1,3 +1,5 @@
+package test;
+
 import net.lenni0451.commons.asm.provider.LoaderClassProvider;
 import net.lenni0451.minijvm.ExecutionManager;
 import net.lenni0451.minijvm.context.ExecutionContext;
@@ -6,14 +8,14 @@ import net.lenni0451.minijvm.execution.Executor;
 import net.lenni0451.minijvm.object.ExecutorClass;
 import net.lenni0451.minijvm.stack.StackDouble;
 
-public class Test4 {
+public class Test2 {
 
     public static void main(String[] args) {
         ExecutionManager manager = new ExecutionManager(new LoaderClassProvider());
         ExecutionContext context = new ExecutionContext();
 
         final double d = 1 / 0.75;
-        ExecutorClass test4Class = manager.loadClass(context, "Test4");
+        ExecutorClass test4Class = manager.loadClass(context, "test/Test2");
         ExecutorClass.ResolvedMethod doitMethod = test4Class.findMethod("doit", "(D)D");
         ExecutionResult result = Executor.execute(manager, context, test4Class, doitMethod.method(), null, new StackDouble(d));
         System.out.println(result);
