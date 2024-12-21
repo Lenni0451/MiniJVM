@@ -6,6 +6,10 @@ public record StackInt(int value) implements StackElement {
         this(b ? 1 : 0);
     }
 
+    public boolean booleanValue() {
+        return this.value != 0;
+    }
+
     @Override
     public int size() {
         return 1;

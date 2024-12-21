@@ -5,6 +5,7 @@ import net.lenni0451.minijvm.execution.MethodExecutor;
 import net.lenni0451.minijvm.object.ExecutorClass;
 import net.lenni0451.minijvm.object.types.ClassObject;
 import net.lenni0451.minijvm.stack.StackInt;
+import net.lenni0451.minijvm.stack.StackLong;
 import net.lenni0451.minijvm.stack.StackObject;
 import net.lenni0451.minijvm.utils.ExceptionUtils;
 import net.lenni0451.minijvm.utils.ExecutorTypeUtils;
@@ -54,7 +55,7 @@ public class UnsafeNatives implements Consumer<ExecutionManager> {
             if (fieldNode == null) {
                 return ExceptionUtils.newException(executionManager, executionContext, "java/lang/InternalError", fieldName);
             }
-            return returnValue(new StackInt(UnsafeUtils.getFieldHashCode(fieldNode)));
+            return returnValue(new StackLong(UnsafeUtils.getFieldHashCode(fieldNode)));
         });
     }
 

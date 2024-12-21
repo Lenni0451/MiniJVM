@@ -895,7 +895,7 @@ public class JVMMethodExecutor implements MethodExecutor {
             throw new ExecutorException(executionContext, "Tried to load empty " + element.getClass().getSimpleName() + " value from stack");
         }
         if (!expectedType.isInstance(element)) {
-            throw new ExecutorException(executionContext, "Expected " + expectedType.getName() + " but got " + element.getClass().getSimpleName());
+            throw new ExecutorException(executionContext, "Expected " + expectedType.getSimpleName() + " but got " + element.getClass().getSimpleName());
         }
     }
 

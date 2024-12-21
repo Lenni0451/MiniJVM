@@ -58,6 +58,8 @@ public class ExecutionManager {
         this.accept(new ReflectionNatives());
         this.accept(new ArrayNatives());
         this.accept(new ThrowableNatives());
+        this.accept(new ThreadNatives());
+        this.accept(new ClassLoaderNatives());
     }
 
     public void accept(final Consumer<ExecutionManager> consumer) {
