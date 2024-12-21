@@ -822,6 +822,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                         currentInstruction = matchingTryCatchBlock.handler; //Jump
                         stack.clear();
                         stack.push(new StackObject(result.getException()));
+                        result = null;
                     }
                 } else {
                     break;

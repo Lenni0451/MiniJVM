@@ -57,6 +57,7 @@ public class ExecutionManager {
         this.accept(new UnsafeNatives());
         this.accept(new ReflectionNatives());
         this.accept(new ArrayNatives());
+        this.accept(new ThrowableNatives());
     }
 
     public void accept(final Consumer<ExecutionManager> consumer) {
