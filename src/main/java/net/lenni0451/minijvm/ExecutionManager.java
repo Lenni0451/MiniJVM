@@ -1,13 +1,18 @@
 package net.lenni0451.minijvm;
 
 import lombok.SneakyThrows;
+import net.lenni0451.commons.asm.Modifiers;
 import net.lenni0451.commons.asm.provider.ClassProvider;
 import net.lenni0451.minijvm.context.ExecutionContext;
+import net.lenni0451.minijvm.exception.ExecutorException;
+import net.lenni0451.minijvm.execution.Executor;
+import net.lenni0451.minijvm.execution.JVMMethodExecutor;
 import net.lenni0451.minijvm.execution.MethodExecutor;
-import net.lenni0451.minijvm.natives.*;
+import net.lenni0451.minijvm.execution.natives.*;
 import net.lenni0451.minijvm.object.*;
 import net.lenni0451.minijvm.stack.StackElement;
 import net.lenni0451.minijvm.stack.StackObject;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -24,17 +29,20 @@ import static net.lenni0451.commons.asm.Types.type;
  */
 public class ExecutionManager {
 
+    public static final boolean DEBUG = true;
+
     private final ClassProvider classProvider;
     private final Map<String, ExecutorClass> loadedClasses;
     private final Map<String, ClassClass> loadedClassClasses;
-    private final Map<String, MethodExecutor> nativeExecutors;
+    private final Map<String, MethodExecutor> methodExecutors;
 
     public ExecutionManager(final ClassProvider classProvider) {
         this.classProvider = classProvider;
         this.loadedClasses = new HashMap<>();
         this.loadedClassClasses = new HashMap<>();
-        this.nativeExecutors = new HashMap<>();
+        this.methodExecutors = new HashMap<>();
 
+        this.registerMethodExecutor(null, new JVMMethodExecutor());
         this.accept(new ClassNatives());
         this.accept(new StringUTF16Natives());
         this.accept(new SystemNatives());
@@ -56,12 +64,18 @@ public class ExecutionManager {
         return this.classProvider;
     }
 
-    public Map<String, MethodExecutor> getNativeExecutors() {
-        return this.nativeExecutors;
+    public void registerMethodExecutor(final String name, final MethodExecutor methodExecutor) {
+        this.methodExecutors.put(name, methodExecutor);
     }
 
-    public void registerNativeExecutor(final String name, final MethodExecutor methodExecutor) {
-        this.nativeExecutors.put(name, methodExecutor);
+    public MethodExecutor getMethodExecutor(final ExecutionContext executionContext, final String owner, final MethodNode methodNode) {
+        MethodExecutor methodExecutor = this.methodExecutors.get(owner + "." + methodNode.name + methodNode.desc);
+        if (methodExecutor != null) return methodExecutor;
+        if (Modifiers.has(methodNode.access, Opcodes.ACC_NATIVE)) {
+            throw new ExecutorException(executionContext, "Native method not implemented: " + owner + "." + methodNode.name + methodNode.desc);
+        } else {
+            return this.methodExecutors.get(null);
+        }
     }
 
     @SneakyThrows

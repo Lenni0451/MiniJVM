@@ -1,4 +1,4 @@
-package net.lenni0451.minijvm;
+package net.lenni0451.minijvm.execution;
 
 import net.lenni0451.minijvm.object.ExecutorObject;
 import net.lenni0451.minijvm.stack.StackElement;
@@ -40,6 +40,17 @@ public class ExecutionResult {
 
     public ExecutorObject getException() {
         return this.exception;
+    }
+
+    @Override
+    public String toString() {
+        if (this.hasException()) {
+            return "ExecutionResult{exception=" + this.exception.getOwner().getClassNode().name + "}";
+        } else if (this.returnValue == null) {
+            return "ExecutionResult{void}";
+        } else {
+            return "ExecutionResult{returnValue=" + this.returnValue + "}";
+        }
     }
 
 }

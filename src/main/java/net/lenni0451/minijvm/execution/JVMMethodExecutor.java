@@ -1,14 +1,11 @@
-package net.lenni0451.minijvm;
+package net.lenni0451.minijvm.execution;
 
 import net.lenni0451.commons.asm.Modifiers;
+import net.lenni0451.minijvm.ExecutionManager;
 import net.lenni0451.minijvm.context.ExecutionContext;
-import net.lenni0451.minijvm.context.ExecutionContext.StackFrame;
 import net.lenni0451.minijvm.exception.ExecutorException;
-import net.lenni0451.minijvm.execution.MethodExecutor;
 import net.lenni0451.minijvm.object.ArrayObject;
 import net.lenni0451.minijvm.object.ExecutorClass;
-import net.lenni0451.minijvm.object.ExecutorClass.ResolvedField;
-import net.lenni0451.minijvm.object.ExecutorClass.ResolvedMethod;
 import net.lenni0451.minijvm.object.ExecutorObject;
 import net.lenni0451.minijvm.stack.*;
 import net.lenni0451.minijvm.utils.ExecutorStack;
@@ -23,36 +20,11 @@ import java.util.stream.Collectors;
 
 import static net.lenni0451.commons.asm.Types.*;
 
-public class Executor {
+public class JVMMethodExecutor implements MethodExecutor {
 
-    private static final boolean DEBUG = true;
-
-    //TODO: Every execution adds a new call to the actual JVM stack, this can easily cause a stack overflow
-    //      Maybe find a way to not invoke this method recursively
-    public static ExecutionResult execute(final ExecutionManager executionManager, final ExecutionContext executionContext, final ExecutorClass currentClass, final MethodNode currentMethod, final ExecutorObject instance, final StackElement[] arguments) {
-        if (DEBUG) {
-            System.out.println("Invoking method: " + currentClass.getClassNode().name + " " + currentMethod.name + currentMethod.desc);
-        }
+    @Override
+    public ExecutionResult execute(ExecutionManager executionManager, ExecutionContext executionContext, ExecutorClass currentClass, MethodNode currentMethod, ExecutorObject instance, StackElement[] arguments) {
         boolean isStatic = Modifiers.has(currentMethod.access, Opcodes.ACC_STATIC);
-        if (isStatic && instance != null) {
-            throw new IllegalStateException("Tried to execute a static method with an instance");
-        } else if (!isStatic && instance == null) {
-            throw new IllegalStateException("Tried to execute an instance method without an instance");
-        }
-        if (Modifiers.has(currentMethod.access, Opcodes.ACC_NATIVE)) {
-            executionContext.pushStackFrame(currentClass, currentMethod, -2);
-            MethodExecutor methodExecutor = executionManager.getNativeExecutors().get(currentClass.getClassNode().name + "." + currentMethod.name + currentMethod.desc);
-            if (methodExecutor == null) {
-                throw new ExecutorException(executionContext, "Native method not found: " + currentClass.getClassNode().name + "." + currentMethod.name + currentMethod.desc);
-            }
-            ExecutionResult returnValue = methodExecutor.execute(executionManager, executionContext, currentClass, currentMethod, instance, arguments);
-            executionContext.popStackFrame();
-            if (DEBUG) {
-                System.out.println("----- Finished " + currentClass.getClassNode().name + " " + currentMethod.name + currentMethod.desc + " execution with value " + returnValue + " -----");
-            }
-            return returnValue;
-        }
-
         Map<Integer, StackElement> locals = new HashMap<>();
         {
             if (!isStatic) locals.put(0, new StackObject(instance));
@@ -64,11 +36,11 @@ public class Executor {
             }
         }
         ExecutorStack stack = new ExecutorStack(executionContext);
-        StackFrame stackFrame = executionContext.pushStackFrame(currentClass, currentMethod, -1);
+        ExecutionContext.StackFrame stackFrame = executionContext.pushStackFrame(currentClass, currentMethod, -1);
         AbstractInsnNode currentInstruction = currentMethod.instructions.getFirst();
         ExecutionResult result = null;
         while (true) {
-            if (DEBUG) {
+            if (ExecutionManager.DEBUG) {
                 System.out.println("  " + currentInstruction.getClass().getSimpleName() + " -> " + Arrays.stream(stack.getStack()).map(StackElement::toString).collect(Collectors.joining(", ")));
             }
             int opcode = currentInstruction.getOpcode();
@@ -633,7 +605,7 @@ public class Executor {
                 case Opcodes.PUTSTATIC:
                     FieldInsnNode fieldInsnNode = (FieldInsnNode) currentInstruction;
                     ExecutorClass owner = executionManager.loadClass(executionContext, fieldInsnNode.owner);
-                    ResolvedField fieldNode = owner.findField(fieldInsnNode.name, fieldInsnNode.desc);
+                    ExecutorClass.ResolvedField fieldNode = owner.findField(fieldInsnNode.name, fieldInsnNode.desc);
                     if (fieldNode == null) {
                         //TODO: Throw internal exception
                         throw new ExecutorException(executionContext, "Field not found: " + fieldInsnNode.owner + " " + fieldInsnNode.name + " " + fieldInsnNode.desc);
@@ -694,7 +666,7 @@ public class Executor {
                     }
                     ExecutorObject ownerObject = ((StackObject) ownerElement).value();
                     //TODO: Interface checks
-                    ResolvedMethod methodNode;
+                    ExecutorClass.ResolvedMethod methodNode;
                     if (opcode == Opcodes.INVOKESPECIAL) {
                         ExecutorClass ownerClass = executionManager.loadClass(executionContext, methodInsnNode.owner);
                         methodNode = ownerClass.findMethod(methodInsnNode.name, methodInsnNode.desc);
@@ -851,10 +823,6 @@ public class Executor {
             }
 
             currentInstruction = currentInstruction.getNext();
-        }
-        executionContext.popStackFrame();
-        if (DEBUG) {
-            System.out.println("----- Finished " + currentClass.getClassNode().name + " " + currentMethod.name + currentMethod.desc + " execution with result " + result + " -----");
         }
         return result;
     }

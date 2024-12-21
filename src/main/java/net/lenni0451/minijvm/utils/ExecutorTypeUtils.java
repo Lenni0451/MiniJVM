@@ -2,8 +2,8 @@ package net.lenni0451.minijvm.utils;
 
 import net.lenni0451.commons.asm.ASMUtils;
 import net.lenni0451.minijvm.ExecutionManager;
-import net.lenni0451.minijvm.Executor;
 import net.lenni0451.minijvm.context.ExecutionContext;
+import net.lenni0451.minijvm.execution.Executor;
 import net.lenni0451.minijvm.object.ArrayObject;
 import net.lenni0451.minijvm.object.ClassClass;
 import net.lenni0451.minijvm.object.ExecutorClass;

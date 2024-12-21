@@ -1,7 +1,7 @@
 import net.lenni0451.commons.asm.provider.LoaderClassProvider;
 import net.lenni0451.minijvm.ExecutionManager;
-import net.lenni0451.minijvm.Executor;
 import net.lenni0451.minijvm.context.ExecutionContext;
+import net.lenni0451.minijvm.execution.Executor;
 import net.lenni0451.minijvm.object.ExecutorClass;
 import net.lenni0451.minijvm.stack.StackDouble;
 import net.lenni0451.minijvm.stack.StackElement;

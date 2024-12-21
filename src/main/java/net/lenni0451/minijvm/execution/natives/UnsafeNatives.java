@@ -1,4 +1,4 @@
-package net.lenni0451.minijvm.natives;
+package net.lenni0451.minijvm.execution.natives;
 
 import net.lenni0451.minijvm.ExecutionManager;
 import net.lenni0451.minijvm.execution.MethodExecutor;
@@ -14,7 +14,7 @@ import org.objectweb.asm.tree.FieldNode;
 
 import java.util.function.Consumer;
 
-import static net.lenni0451.minijvm.ExecutionResult.returnValue;
+import static net.lenni0451.minijvm.execution.ExecutionResult.returnValue;
 
 /**
  * The real deal.
@@ -23,11 +23,11 @@ public class UnsafeNatives implements Consumer<ExecutionManager> {
 
     @Override
     public void accept(ExecutionManager manager) {
-        manager.registerNativeExecutor("jdk/internal/misc/Unsafe.registerNatives()V", MethodExecutor.NOOP_VOID);
-        manager.registerNativeExecutor("jdk/internal/misc/Unsafe.arrayBaseOffset0(Ljava/lang/Class;)I", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
+        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.registerNatives()V", MethodExecutor.NOOP_VOID);
+        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.arrayBaseOffset0(Ljava/lang/Class;)I", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
             return returnValue(new StackInt(16));
         });
-        manager.registerNativeExecutor("jdk/internal/misc/Unsafe.arrayIndexScale0(Ljava/lang/Class;)I", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
+        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.arrayIndexScale0(Ljava/lang/Class;)I", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
             ClassClass clazz = (ClassClass) ((StackObject) arguments[0]).value().getOwner();
             Type type = Type.getType(clazz.getClassNode().name);
             type = type.getElementType();
@@ -43,7 +43,7 @@ public class UnsafeNatives implements Consumer<ExecutionManager> {
                 default -> 4; //Address size
             }));
         });
-        manager.registerNativeExecutor("jdk/internal/misc/Unsafe.objectFieldOffset1(Ljava/lang/Class;Ljava/lang/String;)J", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
+        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.objectFieldOffset1(Ljava/lang/Class;Ljava/lang/String;)J", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
             //TODO: Exceptions
             ClassClass classClass = (ClassClass) ((StackObject) arguments[0]).value().getOwner();
             ExecutorClass executorClass = executionManager.loadClass(executionContext, classClass.getClassNode().name);

@@ -1,4 +1,4 @@
-package net.lenni0451.minijvm.natives;
+package net.lenni0451.minijvm.execution.natives;
 
 import net.lenni0451.minijvm.ExecutionManager;
 import net.lenni0451.minijvm.object.ClassClass;
@@ -10,13 +10,13 @@ import org.objectweb.asm.Type;
 
 import java.util.function.Consumer;
 
-import static net.lenni0451.minijvm.ExecutionResult.returnValue;
+import static net.lenni0451.minijvm.execution.ExecutionResult.returnValue;
 
 public class ArrayNatives implements Consumer<ExecutionManager> {
 
     @Override
     public void accept(ExecutionManager manager) {
-        manager.registerNativeExecutor("java/lang/reflect/Array.newArray(Ljava/lang/Class;I)Ljava/lang/Object;", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
+        manager.registerMethodExecutor("java/lang/reflect/Array.newArray(Ljava/lang/Class;I)Ljava/lang/Object;", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
             ClassClass classClass = (ClassClass) ((StackObject) arguments[0]).value().getOwner();
             Type arrayType = Type.getType("[" + classClass.getClassNode().name);
             ExecutorClass arrayClass = executionManager.loadClass(executionContext, arrayType.getDescriptor());

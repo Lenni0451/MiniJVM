@@ -1,8 +1,8 @@
-package net.lenni0451.minijvm.natives;
+package net.lenni0451.minijvm.execution.natives;
 
 import net.lenni0451.minijvm.ExecutionManager;
-import net.lenni0451.minijvm.ExecutionResult;
 import net.lenni0451.minijvm.context.ExecutionContext;
+import net.lenni0451.minijvm.execution.ExecutionResult;
 import net.lenni0451.minijvm.execution.MethodExecutor;
 import net.lenni0451.minijvm.object.ClassClass;
 import net.lenni0451.minijvm.object.ExecutorClass;
@@ -13,13 +13,13 @@ import org.objectweb.asm.tree.MethodNode;
 
 import java.util.function.Consumer;
 
-import static net.lenni0451.minijvm.ExecutionResult.returnValue;
+import static net.lenni0451.minijvm.execution.ExecutionResult.returnValue;
 
 public class ReflectionNatives implements Consumer<ExecutionManager> {
 
     @Override
     public void accept(ExecutionManager manager) {
-        manager.registerNativeExecutor("jdk/internal/reflect/Reflection.getCallerClass()Ljava/lang/Class;", new MethodExecutor() {
+        manager.registerMethodExecutor("jdk/internal/reflect/Reflection.getCallerClass()Ljava/lang/Class;", new MethodExecutor() {
             @Override
             public ExecutionResult execute(ExecutionManager executionManager, ExecutionContext executionContext, ExecutorClass currentClass, MethodNode currentMethod, ExecutorObject instance, StackElement[] arguments) {
                 ExecutionContext.StackFrame[] stackFrames = executionContext.getStackFrames();
