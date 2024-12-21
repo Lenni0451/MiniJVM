@@ -4,10 +4,9 @@ import net.lenni0451.commons.asm.ASMUtils;
 import net.lenni0451.minijvm.ExecutionManager;
 import net.lenni0451.minijvm.context.ExecutionContext;
 import net.lenni0451.minijvm.execution.Executor;
-import net.lenni0451.minijvm.object.ArrayObject;
-import net.lenni0451.minijvm.object.ClassClass;
 import net.lenni0451.minijvm.object.ExecutorClass;
 import net.lenni0451.minijvm.object.ExecutorObject;
+import net.lenni0451.minijvm.object.types.ArrayObject;
 import net.lenni0451.minijvm.stack.*;
 import org.objectweb.asm.ConstantDynamic;
 import org.objectweb.asm.Handle;
@@ -45,9 +44,8 @@ public class ExecutorTypeUtils {
             }
             return new StackObject(stringObject);
         } else if (jvmObject instanceof Type t) {
-            ClassClass classClass = executionManager.loadClassClass(executionContext, t.getInternalName());
-            ExecutorObject executorObject = executionManager.instantiate(executionContext, classClass);
-            return new StackObject(executorObject);
+            ExecutorClass typeClass = executionManager.loadClass(executionContext, t.getInternalName());
+            return new StackObject(executionManager.instantiateClass(executionContext, typeClass));
         } else if (jvmObject instanceof Handle) {
             //TODO: Convert to executor object
             throw new UnsupportedOperationException("Unsupported field value type: " + jvmObject.getClass().getName());

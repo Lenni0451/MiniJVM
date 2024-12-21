@@ -2,10 +2,12 @@ package net.lenni0451.minijvm.execution.natives;
 
 import net.lenni0451.minijvm.ExecutionManager;
 import net.lenni0451.minijvm.execution.MethodExecutor;
-import net.lenni0451.minijvm.object.ClassClass;
-import net.lenni0451.minijvm.object.ExecutorObject;
+import net.lenni0451.minijvm.object.ExecutorClass;
+import net.lenni0451.minijvm.object.types.ClassObject;
 import net.lenni0451.minijvm.stack.StackInt;
 import net.lenni0451.minijvm.stack.StackObject;
+import net.lenni0451.minijvm.utils.ClassUtils;
+import net.lenni0451.minijvm.utils.ExceptionUtils;
 import net.lenni0451.minijvm.utils.ExecutorTypeUtils;
 
 import java.util.function.Consumer;
@@ -21,14 +23,16 @@ public class ClassNatives implements Consumer<ExecutionManager> {
             return returnValue(new StackInt(0));
         });
         manager.registerMethodExecutor("java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
-            //TODO: Exceptions
-            String name = ExecutorTypeUtils.fromExecutorString(executionManager, executionContext, ((StackObject) arguments[0]).value());
-            ClassClass classClass = executionManager.loadClassClass(executionContext, name);
-            ExecutorObject classObject = executionManager.instantiate(executionContext, classClass);
-            return returnValue(new StackObject(classObject));
+            String className = ExecutorTypeUtils.fromExecutorString(executionManager, executionContext, ((StackObject) arguments[0]).value());
+            if (!ClassUtils.PRIMITIVE_CLASSES.contains(className)) {
+                return ExceptionUtils.newException(executionManager, executionContext, "java/lang/ClassNotFoundException", className);
+            }
+            ExecutorClass primitiveClass = executionManager.loadClass(executionContext, className);
+            return returnValue(new StackObject(executionManager.instantiateClass(executionContext, primitiveClass)));
         });
         manager.registerMethodExecutor("java/lang/Class.isArray()Z", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
-            return returnValue(new StackInt(instance.getOwner().getClassNode().name.startsWith("[") ? 1 : 0));
+            boolean isArray = ((ClassObject) instance).getClassType().getClassNode().name.startsWith("[");
+            return returnValue(new StackInt(isArray));
         });
     }
 

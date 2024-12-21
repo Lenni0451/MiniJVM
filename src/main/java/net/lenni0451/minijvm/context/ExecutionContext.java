@@ -22,6 +22,10 @@ public class ExecutionContext {
         this.contextData = new HashMap<>();
     }
 
+    public StackFrame getCurrentStackFrame() {
+        return this.stackFrames.get(this.stackFrames.size() - 1);
+    }
+
     public StackFrame[] getStackFrames() {
         return this.stackFrames.toArray(new StackFrame[0]);
     }

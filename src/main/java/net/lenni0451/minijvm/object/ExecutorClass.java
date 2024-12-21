@@ -5,6 +5,7 @@ import net.lenni0451.commons.asm.ASMUtils;
 import net.lenni0451.commons.asm.Modifiers;
 import net.lenni0451.minijvm.ExecutionManager;
 import net.lenni0451.minijvm.context.ExecutionContext;
+import net.lenni0451.minijvm.execution.Executor;
 import net.lenni0451.minijvm.stack.StackElement;
 import net.lenni0451.minijvm.stack.StackObject;
 import net.lenni0451.minijvm.utils.ExecutorTypeUtils;
@@ -61,6 +62,14 @@ public class ExecutorClass {
 
     public ClassNode getClassNode() {
         return this.classNode;
+    }
+
+    public void invokeStatic(final ExecutionManager executionManager, final ExecutionContext executionContext) {
+        for (MethodNode method : this.classNode.methods) {
+            if (Modifiers.has(method.access, Opcodes.ACC_STATIC) && method.name.equals("<clinit>")) {
+                Executor.execute(executionManager, executionContext, this, method, null);
+            }
+        }
     }
 
     public boolean isInstance(final String className) {

@@ -2,11 +2,11 @@ package net.lenni0451.minijvm.execution.natives;
 
 import net.lenni0451.minijvm.ExecutionManager;
 import net.lenni0451.minijvm.execution.MethodExecutor;
-import net.lenni0451.minijvm.object.ClassClass;
 import net.lenni0451.minijvm.object.ExecutorClass;
+import net.lenni0451.minijvm.object.types.ClassObject;
 import net.lenni0451.minijvm.stack.StackInt;
-import net.lenni0451.minijvm.stack.StackLong;
 import net.lenni0451.minijvm.stack.StackObject;
+import net.lenni0451.minijvm.utils.ExceptionUtils;
 import net.lenni0451.minijvm.utils.ExecutorTypeUtils;
 import net.lenni0451.minijvm.utils.UnsafeUtils;
 import org.objectweb.asm.Type;
@@ -28,9 +28,8 @@ public class UnsafeNatives implements Consumer<ExecutionManager> {
             return returnValue(new StackInt(16));
         });
         manager.registerMethodExecutor("jdk/internal/misc/Unsafe.arrayIndexScale0(Ljava/lang/Class;)I", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
-            ClassClass clazz = (ClassClass) ((StackObject) arguments[0]).value().getOwner();
-            Type type = Type.getType(clazz.getClassNode().name);
-            type = type.getElementType();
+            ClassObject executorClass = (ClassObject) ((StackObject) arguments[0]).value();
+            Type type = Type.getType(executorClass.getClassType().getClassNode().name).getElementType();
             return returnValue(new StackInt(switch (type.getSort()) {
                 case Type.BOOLEAN -> 1;
                 case Type.BYTE -> Byte.BYTES;
@@ -44,12 +43,18 @@ public class UnsafeNatives implements Consumer<ExecutionManager> {
             }));
         });
         manager.registerMethodExecutor("jdk/internal/misc/Unsafe.objectFieldOffset1(Ljava/lang/Class;Ljava/lang/String;)J", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
-            //TODO: Exceptions
-            ClassClass classClass = (ClassClass) ((StackObject) arguments[0]).value().getOwner();
-            ExecutorClass executorClass = executionManager.loadClass(executionContext, classClass.getClassNode().name);
+            if (arguments[0] == StackObject.NULL) {
+                return ExceptionUtils.newException(executionManager, executionContext, "java/lang/NullPointerException", "class");
+            } else if (arguments[1] == StackObject.NULL) {
+                return ExceptionUtils.newException(executionManager, executionContext, "java/lang/NullPointerException", "name");
+            }
+            ExecutorClass executorClass = ((ClassObject) ((StackObject) arguments[0]).value()).getClassType();
             String fieldName = ExecutorTypeUtils.fromExecutorString(executionManager, executionContext, ((StackObject) arguments[1]).value());
             FieldNode fieldNode = UnsafeUtils.getFieldByName(executorClass, fieldName);
-            return returnValue(new StackLong(UnsafeUtils.getFieldHashCode(fieldNode)));
+            if (fieldNode == null) {
+                return ExceptionUtils.newException(executionManager, executionContext, "java/lang/InternalError", fieldName);
+            }
+            return returnValue(new StackInt(UnsafeUtils.getFieldHashCode(fieldNode)));
         });
     }
 

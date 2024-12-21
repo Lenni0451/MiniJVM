@@ -13,7 +13,7 @@ public class Executor {
 
     private static final boolean DEBUG = true;
 
-    public static ExecutionResult execute(final ExecutionManager executionManager, final ExecutionContext executionContext, final ExecutorClass currentClass, final MethodNode currentMethod, final ExecutorObject instance, final StackElement[] arguments) {
+    public static ExecutionResult execute(final ExecutionManager executionManager, final ExecutionContext executionContext, final ExecutorClass currentClass, final MethodNode currentMethod, final ExecutorObject instance, final StackElement... arguments) {
         if (DEBUG) {
             System.out.println("Invoking method: " + currentClass.getClassNode().name + " " + currentMethod.name + currentMethod.desc);
         }
@@ -24,7 +24,7 @@ public class Executor {
             throw new IllegalStateException("Tried to execute an instance method without an instance");
         }
 
-        executionContext.pushStackFrame(currentClass, currentMethod, -2);
+        executionContext.pushStackFrame(currentClass, currentMethod, Modifiers.has(currentMethod.access, Opcodes.ACC_NATIVE) ? -2 : -1);
         MethodExecutor methodExecutor = executionManager.getMethodExecutor(executionContext, currentClass.getClassNode().name, currentMethod);
         ExecutionResult result = methodExecutor.execute(executionManager, executionContext, currentClass, currentMethod, instance, arguments);
         executionContext.popStackFrame();
