@@ -112,10 +112,11 @@ public class ExecutionManager {
         if (this.classInstances.containsKey(executorClass)) return this.classInstances.get(executorClass);
         ExecutorObject classInstance = new ClassObject(this, executionContext, executorClass);
         { //Component type
-            ExecutorClass.ResolvedField componentTypeField = executorClass.findField("componentType", "Ljava/lang/Class;");
+            ExecutorClass.ResolvedField componentTypeField = classInstance.getOwner().findField("componentType", "Ljava/lang/Class;");
             if (componentTypeField != null) {
                 if (executorClass.getClassNode().name.startsWith("[")) {
                     String componentType = executorClass.getClassNode().name.substring(1);
+                    if (!componentType.startsWith("[") & componentType.length() > 1) componentType = componentType.substring(1, componentType.length() - 1);
                     ExecutorClass componentTypeClass = this.loadClass(executionContext, PRIMITIVE_DESCRIPTOR_TO_CLASS.getOrDefault(componentType, componentType));
                     classInstance.setField(componentTypeField.field(), new StackObject(this.instantiateClass(executionContext, componentTypeClass)));
                 } else {
