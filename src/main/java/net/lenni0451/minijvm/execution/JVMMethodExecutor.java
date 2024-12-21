@@ -16,8 +16,10 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import javax.annotation.Nullable;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static net.lenni0451.commons.asm.Types.*;
 
@@ -682,6 +684,9 @@ public class JVMMethodExecutor implements MethodExecutor {
                             methodNode = ownerObject.getOwner().findMethod(methodInsnNode.name, methodInsnNode.desc);
                         }
                         if (methodNode == null) {
+                            if (ExecutionManager.DEBUG) {
+                                System.out.println("Cannot find method " + methodInsnNode.owner + "." + methodInsnNode.name + methodInsnNode.desc + " in " + ownerObject.getOwner().getClassNode().name);
+                            }
                             result = ExceptionUtils.newException(executionManager, executionContext, "java/lang/NoSuchMethodError", methodInsnNode.name);
                         } else if (Modifiers.has(methodNode.method().access, Opcodes.ACC_STATIC)) {
                             result = ExceptionUtils.newException(executionManager, executionContext, "java/lang/IncompatibleClassChangeError", "Expecting non-static method " + methodInsnNode.owner + "." + methodInsnNode.name + methodInsnNode.desc);
@@ -708,6 +713,9 @@ public class JVMMethodExecutor implements MethodExecutor {
                     ExecutorClass ownerClass = executionManager.loadClass(executionContext, methodInsnNode.owner);
                     ExecutorClass.ResolvedMethod methodNode = ownerClass.findMethod(methodInsnNode.name, methodInsnNode.desc);
                     if (methodNode == null) {
+                        if (ExecutionManager.DEBUG) {
+                            System.out.println("Cannot find method " + methodInsnNode.owner + "." + methodInsnNode.name + methodInsnNode.desc + " in " + ownerClass.getClassNode().name);
+                        }
                         result = ExceptionUtils.newException(executionManager, executionContext, "java/lang/NoSuchMethodError", methodInsnNode.name);
                     } else if (!Modifiers.has(methodNode.method().access, Opcodes.ACC_STATIC)) {
                         result = ExceptionUtils.newException(executionManager, executionContext, "java/lang/IncompatibleClassChangeError", "Expecting static method " + methodInsnNode.owner + "." + methodInsnNode.name + methodInsnNode.desc);
