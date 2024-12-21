@@ -4,7 +4,7 @@ import net.lenni0451.commons.asm.Modifiers;
 import net.lenni0451.minijvm.context.ExecutionContext;
 import net.lenni0451.minijvm.context.ExecutionContext.StackFrame;
 import net.lenni0451.minijvm.exception.ExecutorException;
-import net.lenni0451.minijvm.natives.NativeExecutor;
+import net.lenni0451.minijvm.execution.MethodExecutor;
 import net.lenni0451.minijvm.object.ArrayObject;
 import net.lenni0451.minijvm.object.ExecutorClass;
 import net.lenni0451.minijvm.object.ExecutorClass.ResolvedField;
@@ -17,6 +17,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -28,7 +29,7 @@ public class Executor {
 
     //TODO: Every execution adds a new call to the actual JVM stack, this can easily cause a stack overflow
     //      Maybe find a way to not invoke this method recursively
-    public static StackElement execute(final ExecutionManager executionManager, final ExecutionContext executionContext, final ExecutorClass currentClass, final MethodNode currentMethod, final ExecutorObject instance, final StackElement[] arguments) {
+    public static ExecutionResult execute(final ExecutionManager executionManager, final ExecutionContext executionContext, final ExecutorClass currentClass, final MethodNode currentMethod, final ExecutorObject instance, final StackElement[] arguments) {
         if (DEBUG) {
             System.out.println("Invoking method: " + currentClass.getClassNode().name + " " + currentMethod.name + currentMethod.desc);
         }
@@ -40,11 +41,11 @@ public class Executor {
         }
         if (Modifiers.has(currentMethod.access, Opcodes.ACC_NATIVE)) {
             executionContext.pushStackFrame(currentClass, currentMethod, -2);
-            NativeExecutor nativeExecutor = executionManager.getNativeExecutors().get(currentClass.getClassNode().name + "." + currentMethod.name + currentMethod.desc);
-            if (nativeExecutor == null) {
+            MethodExecutor methodExecutor = executionManager.getNativeExecutors().get(currentClass.getClassNode().name + "." + currentMethod.name + currentMethod.desc);
+            if (methodExecutor == null) {
                 throw new ExecutorException(executionContext, "Native method not found: " + currentClass.getClassNode().name + "." + currentMethod.name + currentMethod.desc);
             }
-            StackElement returnValue = nativeExecutor.execute(executionManager, executionContext, currentClass, currentMethod, instance, arguments);
+            ExecutionResult returnValue = methodExecutor.execute(executionManager, executionContext, currentClass, currentMethod, instance, arguments);
             executionContext.popStackFrame();
             if (DEBUG) {
                 System.out.println("----- Finished " + currentClass.getClassNode().name + " " + currentMethod.name + currentMethod.desc + " execution with value " + returnValue + " -----");
@@ -65,9 +66,8 @@ public class Executor {
         ExecutorStack stack = new ExecutorStack(executionContext);
         StackFrame stackFrame = executionContext.pushStackFrame(currentClass, currentMethod, -1);
         AbstractInsnNode currentInstruction = currentMethod.instructions.getFirst();
-        StackElement returnValue = null;
-        EXECUTION:
-        while (executionContext.shouldRun()) {
+        ExecutionResult result = null;
+        while (true) {
             if (DEBUG) {
                 System.out.println("  " + currentInstruction.getClass().getSimpleName() + " -> " + Arrays.stream(stack.getStack()).map(StackElement::toString).collect(Collectors.joining(", ")));
             }
@@ -468,48 +468,48 @@ public class Executor {
                     JumpInsnNode jumpInsnNode = (JumpInsnNode) currentInstruction;
                     int1 = stack.pop(StackInt.class);
                     if (int1.value() == 0) {
+                        //Jump
                         currentInstruction = jumpInsnNode.label;
-                        continue EXECUTION;
                     }
                     break;
                 case Opcodes.IFNE:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
                     int1 = stack.pop(StackInt.class);
                     if (int1.value() != 0) {
+                        //Jump
                         currentInstruction = jumpInsnNode.label;
-                        continue EXECUTION;
                     }
                     break;
                 case Opcodes.IFLT:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
                     int1 = stack.pop(StackInt.class);
                     if (int1.value() < 0) {
+                        //Jump
                         currentInstruction = jumpInsnNode.label;
-                        continue EXECUTION;
                     }
                     break;
                 case Opcodes.IFGE:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
                     int1 = stack.pop(StackInt.class);
                     if (int1.value() >= 0) {
+                        //Jump
                         currentInstruction = jumpInsnNode.label;
-                        continue EXECUTION;
                     }
                     break;
                 case Opcodes.IFGT:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
                     int1 = stack.pop(StackInt.class);
                     if (int1.value() > 0) {
+                        //Jump
                         currentInstruction = jumpInsnNode.label;
-                        continue EXECUTION;
                     }
                     break;
                 case Opcodes.IFLE:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
                     int1 = stack.pop(StackInt.class);
                     if (int1.value() <= 0) {
+                        //Jump
                         currentInstruction = jumpInsnNode.label;
-                        continue EXECUTION;
                     }
                     break;
                 case Opcodes.IF_ICMPEQ:
@@ -517,8 +517,8 @@ public class Executor {
                     int1 = stack.pop(StackInt.class);
                     int2 = stack.pop(StackInt.class);
                     if (int1.value() == int2.value()) {
+                        //Jump
                         currentInstruction = jumpInsnNode.label;
-                        continue EXECUTION;
                     }
                     break;
                 case Opcodes.IF_ICMPNE:
@@ -526,8 +526,8 @@ public class Executor {
                     int1 = stack.pop(StackInt.class);
                     int2 = stack.pop(StackInt.class);
                     if (int1.value() != int2.value()) {
+                        //Jump
                         currentInstruction = jumpInsnNode.label;
-                        continue EXECUTION;
                     }
                     break;
                 case Opcodes.IF_ICMPLT:
@@ -535,8 +535,8 @@ public class Executor {
                     int1 = stack.pop(StackInt.class);
                     int2 = stack.pop(StackInt.class);
                     if (int2.value() < int1.value()) {
+                        //Jump
                         currentInstruction = jumpInsnNode.label;
-                        continue EXECUTION;
                     }
                     break;
                 case Opcodes.IF_ICMPGE:
@@ -544,8 +544,8 @@ public class Executor {
                     int1 = stack.pop(StackInt.class);
                     int2 = stack.pop(StackInt.class);
                     if (int2.value() >= int1.value()) {
+                        //Jump
                         currentInstruction = jumpInsnNode.label;
-                        continue EXECUTION;
                     }
                     break;
                 case Opcodes.IF_ICMPGT:
@@ -553,8 +553,8 @@ public class Executor {
                     int1 = stack.pop(StackInt.class);
                     int2 = stack.pop(StackInt.class);
                     if (int2.value() > int1.value()) {
+                        //Jump
                         currentInstruction = jumpInsnNode.label;
-                        continue EXECUTION;
                     }
                     break;
                 case Opcodes.IF_ICMPLE:
@@ -562,8 +562,8 @@ public class Executor {
                     int1 = stack.pop(StackInt.class);
                     int2 = stack.pop(StackInt.class);
                     if (int2.value() <= int1.value()) {
+                        //Jump
                         currentInstruction = jumpInsnNode.label;
-                        continue EXECUTION;
                     }
                     break;
                 case Opcodes.IF_ACMPEQ:
@@ -571,8 +571,8 @@ public class Executor {
                     StackObject object1 = stack.pop(StackObject.class);
                     StackObject object2 = stack.pop(StackObject.class);
                     if (object1.value() == object2.value()) {
+                        //Jump
                         currentInstruction = jumpInsnNode.label;
-                        continue EXECUTION;
                     }
                     break;
                 case Opcodes.IF_ACMPNE:
@@ -580,14 +580,14 @@ public class Executor {
                     object1 = stack.pop(StackObject.class);
                     object2 = stack.pop(StackObject.class);
                     if (object1.value() != object2.value()) {
+                        //Jump
                         currentInstruction = jumpInsnNode.label;
-                        continue EXECUTION;
                     }
                     break;
                 case Opcodes.GOTO:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
                     currentInstruction = jumpInsnNode.label;
-                    continue EXECUTION;
+                    break; //Jump
                 case Opcodes.JSR:
                     throw new UnsupportedOperationException(currentInstruction.getClass().getSimpleName() + " " + opcode); //TODO
                 case Opcodes.RET:
@@ -600,7 +600,7 @@ public class Executor {
                     } else {
                         currentInstruction = tableSwitchInsnNode.dflt;
                     }
-                    continue EXECUTION;
+                    break; //Jump
                 case Opcodes.LOOKUPSWITCH:
                     LookupSwitchInsnNode lookupSwitchInsnNode = (LookupSwitchInsnNode) currentInstruction;
                     int1 = stack.pop(StackInt.class);
@@ -610,25 +610,25 @@ public class Executor {
                     } else {
                         currentInstruction = lookupSwitchInsnNode.dflt;
                     }
-                    continue EXECUTION;
+                    break; //Jump
                 case Opcodes.IRETURN:
-                    returnValue = stack.pop(StackInt.class);
-                    break EXECUTION;
+                    result = ExecutionResult.returnValue(stack.pop(StackInt.class));
+                    break;
                 case Opcodes.LRETURN:
-                    returnValue = stack.pop(StackLong.class);
-                    break EXECUTION;
+                    result = ExecutionResult.returnValue(stack.pop(StackLong.class));
+                    break;
                 case Opcodes.FRETURN:
-                    returnValue = stack.pop(StackFloat.class);
-                    break EXECUTION;
+                    result = ExecutionResult.returnValue(stack.pop(StackFloat.class));
+                    break;
                 case Opcodes.DRETURN:
-                    returnValue = stack.pop(StackDouble.class);
-                    break EXECUTION;
+                    result = ExecutionResult.returnValue(stack.pop(StackDouble.class));
+                    break;
                 case Opcodes.ARETURN:
-                    returnValue = stack.pop(StackObject.class);
-                    break EXECUTION;
+                    result = ExecutionResult.returnValue(stack.pop(StackObject.class));
+                    break;
                 case Opcodes.RETURN:
-                    returnValue = null;
-                    break EXECUTION;
+                    result = ExecutionResult.voidResult();
+                    break;
                 case Opcodes.GETSTATIC: //TODO: Access checks for all fields and methods
                 case Opcodes.PUTSTATIC:
                     FieldInsnNode fieldInsnNode = (FieldInsnNode) currentInstruction;
@@ -709,10 +709,12 @@ public class Executor {
                         //TODO: Throw internal exception
                         throw new ExecutorException(executionContext, "Tried to invoke static method on instance");
                     }
-                    StackElement returnElement = Executor.execute(executionManager, executionContext, methodNode.owner(), methodNode.method(), ownerObject, stackElements.toArray(new StackElement[0]));
-                    if (returnElement != null) {
-                        verifyType(executionContext, returnElement, ExecutorTypeUtils.typeToStackType(returnType(methodNode.method())));
-                        stack.push(returnElement);
+                    ExecutionResult invokeResult = Executor.execute(executionManager, executionContext, methodNode.owner(), methodNode.method(), ownerObject, stackElements.toArray(new StackElement[0]));
+                    if (invokeResult.hasReturnValue()) {
+                        verifyType(executionContext, invokeResult.getReturnValue(), ExecutorTypeUtils.typeToStackType(returnType(methodNode.method())));
+                        stack.push(invokeResult.getReturnValue());
+                    } else if (invokeResult.hasException()) {
+                        result = invokeResult;
                     }
                     break;
                 case Opcodes.INVOKESTATIC:
@@ -733,10 +735,12 @@ public class Executor {
                     if (!Modifiers.has(methodNode.method().access, Opcodes.ACC_STATIC)) {
                         throw new ExecutorException(executionContext, "Tried to invoke non static method as static");
                     }
-                    returnElement = Executor.execute(executionManager, executionContext, methodNode.owner(), methodNode.method(), null, stackElements.toArray(new StackElement[0]));
-                    if (returnElement != null) {
-                        verifyType(executionContext, returnElement, ExecutorTypeUtils.typeToStackType(returnType(methodNode.method())));
-                        stack.push(returnElement);
+                    invokeResult = Executor.execute(executionManager, executionContext, methodNode.owner(), methodNode.method(), null, stackElements.toArray(new StackElement[0]));
+                    if (invokeResult.hasReturnValue()) {
+                        verifyType(executionContext, invokeResult.getReturnValue(), ExecutorTypeUtils.typeToStackType(returnType(methodNode.method())));
+                        stack.push(invokeResult.getReturnValue());
+                    } else if (invokeResult.hasException()) {
+                        result = invokeResult;
                     }
                     break;
                 case Opcodes.INVOKEDYNAMIC:
@@ -782,7 +786,9 @@ public class Executor {
                     stack.push(new StackInt(((ArrayObject) array.value()).getElements().length));
                     break;
                 case Opcodes.ATHROW:
-                    throw new UnsupportedOperationException(currentInstruction.getClass().getSimpleName() + " " + opcode); //TODO
+                    object = stack.pop(StackObject.class);
+                    result = ExecutionResult.exception(object.value()); //TODO: Check if it is a throwable
+                    break;
                 case Opcodes.CHECKCAST:
                     //TODO: Type checks?
                     break;
@@ -806,16 +812,16 @@ public class Executor {
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
                     object = stack.pop(StackObject.class);
                     if (object == StackObject.NULL) {
+                        //Jump
                         currentInstruction = jumpInsnNode.label;
-                        continue EXECUTION;
                     }
                     break;
                 case Opcodes.IFNONNULL:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
                     object = stack.pop(StackObject.class);
                     if (object != StackObject.NULL) {
+                        //Jump
                         currentInstruction = jumpInsnNode.label;
-                        continue EXECUTION;
                     }
                     break;
                 case -1:
@@ -826,13 +832,31 @@ public class Executor {
                 default:
                     throw new IllegalStateException("Unknown opcode: " + opcode);
             }
+
+            if (result != null) {
+                if (result.hasException()) {
+                    TryCatchBlockNode matchingTryCatchBlock = getMatchingTryCatchBlock(executionManager, executionContext, currentMethod, currentInstruction, result.getException().getOwner());
+                    if (matchingTryCatchBlock == null) {
+                        //If no try catch block was found, throw the exception to the caller
+                        break;
+                    } else {
+                        //A try catch block was found, jump to the handler, clear the stack and push the exception
+                        currentInstruction = matchingTryCatchBlock.handler; //Jump
+                        stack.clear();
+                        stack.push(new StackObject(result.getException()));
+                    }
+                } else {
+                    break;
+                }
+            }
+
             currentInstruction = currentInstruction.getNext();
         }
         executionContext.popStackFrame();
         if (DEBUG) {
-            System.out.println("----- Finished " + currentClass.getClassNode().name + " " + currentMethod.name + currentMethod.desc + " execution with value " + returnValue + " -----");
+            System.out.println("----- Finished " + currentClass.getClassNode().name + " " + currentMethod.name + currentMethod.desc + " execution with result " + result + " -----");
         }
-        return returnValue;
+        return result;
     }
 
     private static Class<? extends StackElement> getTypeFromOpcode(final int opcode) {
@@ -890,6 +914,26 @@ public class Executor {
         if (!expectedType.isInstance(element)) {
             throw new ExecutorException(executionContext, "Expected " + expectedType.getName() + " but got " + element.getClass().getSimpleName());
         }
+    }
+
+    @Nullable
+    private static TryCatchBlockNode getMatchingTryCatchBlock(final ExecutionManager executionManager, final ExecutionContext executionContext, final MethodNode method, final AbstractInsnNode currentInstruction, final ExecutorClass exceptionClass) {
+        int index = method.instructions.indexOf(currentInstruction);
+        for (TryCatchBlockNode tryCatchBlock : method.tryCatchBlocks) {
+            int start = method.instructions.indexOf(tryCatchBlock.start);
+            int end = method.instructions.indexOf(tryCatchBlock.end);
+            if (start < index && end > index) {
+                if (tryCatchBlock.type == null) {
+                    return tryCatchBlock;
+                } else {
+                    ExecutorClass catchClass = executionManager.loadClass(executionContext, tryCatchBlock.type);
+                    if (exceptionClass.isInstance(catchClass.getClassNode().name)) {
+                        return tryCatchBlock;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
 }

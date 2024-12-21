@@ -10,6 +10,8 @@ import org.objectweb.asm.Type;
 
 import java.util.function.Consumer;
 
+import static net.lenni0451.minijvm.ExecutionResult.returnValue;
+
 public class ArrayNatives implements Consumer<ExecutionManager> {
 
     @Override
@@ -19,7 +21,7 @@ public class ArrayNatives implements Consumer<ExecutionManager> {
             Type arrayType = Type.getType("[" + classClass.getClassNode().name);
             ExecutorClass arrayClass = executionManager.loadClass(executionContext, arrayType.getDescriptor());
             ExecutorObject array = executionManager.instantiateArray(executionContext, arrayClass, ((StackInt) arguments[1]).value());
-            return new StackObject(array);
+            return returnValue(new StackObject(array));
         });
     }
 

@@ -41,7 +41,7 @@ public class Test {
             ExecutionManager manager = new ExecutionManager(new MapClassProvider(classes, MapClassProvider.NameFormat.SLASH).then(new LoaderClassProvider()));
             ExecutionContext context = new ExecutionContext();
             ExecutorClass clazz = manager.loadClass(context, "Test");
-            StackElement returnValue = Executor.execute(manager, context, clazz, methodNode, null, new StackElement[]{});
+            StackElement returnValue = Executor.execute(manager, context, clazz, methodNode, null, new StackElement[]{}).getReturnValue();
             System.out.println(returnValue);
             System.out.println(ExecutorTypeUtils.fromExecutorString(manager, context, ((StackObject) returnValue).value()));
         } catch (ExecutorException e) {

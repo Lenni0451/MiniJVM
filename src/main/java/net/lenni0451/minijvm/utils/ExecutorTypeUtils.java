@@ -92,7 +92,7 @@ public class ExecutorTypeUtils {
             throw new IllegalArgumentException("The given executor object is not a string object");
         }
         ExecutorClass.ResolvedMethod toCharArray = executorObject.getOwner().findMethod("toCharArray", "()[C");
-        StackObject valueArray = (StackObject) Executor.execute(executionManager, executionContext, toCharArray.owner(), toCharArray.method(), executorObject, new StackElement[0]);
+        StackObject valueArray = (StackObject) Executor.execute(executionManager, executionContext, toCharArray.owner(), toCharArray.method(), executorObject, new StackElement[0]).getReturnValue();
         StringBuilder builder = new StringBuilder();
         for (StackElement element : ((ArrayObject) valueArray.value()).getElements()) {
             builder.append((char) ((StackInt) element).value());

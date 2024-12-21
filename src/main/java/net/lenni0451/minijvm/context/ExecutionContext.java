@@ -16,7 +16,6 @@ public class ExecutionContext {
 
     private final List<StackFrame> stackFrames;
     private final Map<ContextKey<?>, Object> contextData;
-    private boolean shouldRun = true;
 
     public ExecutionContext() {
         this.stackFrames = new ArrayList<>();
@@ -39,14 +38,6 @@ public class ExecutionContext {
 
     public <T> T getContextData(final ContextKey<T> contextKey, final Supplier<T> initializer) {
         return (T) this.contextData.computeIfAbsent(contextKey, key -> initializer.get());
-    }
-
-    public boolean shouldRun() {
-        return this.shouldRun;
-    }
-
-    public void terminate() {
-        this.shouldRun = false;
     }
 
 

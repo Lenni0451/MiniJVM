@@ -8,15 +8,19 @@ import net.lenni0451.minijvm.stack.StackObject;
 
 import java.util.function.Consumer;
 
+import static net.lenni0451.minijvm.ExecutionResult.returnValue;
+
 public class ObjectNatives implements Consumer<ExecutionManager> {
 
     @Override
     public void accept(ExecutionManager manager) {
-        manager.registerNativeExecutor("java/lang/Object.hashCode()I", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> new StackInt(instance.hashCode()));
+        manager.registerNativeExecutor("java/lang/Object.hashCode()I", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
+            return returnValue(new StackInt(instance.hashCode()));
+        });
         manager.registerNativeExecutor("java/lang/Object.getClass()Ljava/lang/Class;", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
             ClassClass classClass = executionManager.loadClassClass(executionContext, instance.getOwner().getClassNode().name);
             ExecutorObject classObject = executionManager.instantiate(executionContext, classClass);
-            return new StackObject(classObject);
+            return returnValue(new StackObject(classObject));
         });
     }
 

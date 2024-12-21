@@ -6,13 +6,15 @@ import net.lenni0451.minijvm.stack.StackInt;
 
 import java.util.function.Consumer;
 
+import static net.lenni0451.minijvm.ExecutionResult.returnValue;
+
 public class FloatNatives implements Consumer<ExecutionManager> {
 
     @Override
     public void accept(ExecutionManager manager) {
         manager.registerNativeExecutor("java/lang/Float.floatToRawIntBits(F)I", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
             float value = ((StackFloat) arguments[0]).value();
-            return new StackInt(Float.floatToRawIntBits(value));
+            return returnValue(new StackInt(Float.floatToRawIntBits(value)));
         });
     }
 

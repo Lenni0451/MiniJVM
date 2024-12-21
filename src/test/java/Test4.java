@@ -14,7 +14,7 @@ public class Test4 {
 
         ExecutorClass test4Class = manager.loadClass(context, "Test4");
         ExecutorClass.ResolvedMethod doitMethod = test4Class.findMethod("doit", "(D)D");
-        StackElement result = Executor.execute(manager, context, test4Class, doitMethod.method(), null, new StackElement[]{new StackDouble(1 / 0.75)});
+        StackElement result = Executor.execute(manager, context, test4Class, doitMethod.method(), null, new StackElement[]{new StackDouble(1 / 0.75)}).getReturnValue();
         System.out.println(result);
         System.out.println(doit(1 / 0.75));
     }

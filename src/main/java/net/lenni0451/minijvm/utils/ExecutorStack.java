@@ -16,6 +16,10 @@ public class ExecutorStack {
         this.stack = new Stack<>();
     }
 
+    public void clear() {
+        this.stack.clear();
+    }
+
     public StackElement[] getStack() {
         return this.stack.toArray(new StackElement[0]);
     }

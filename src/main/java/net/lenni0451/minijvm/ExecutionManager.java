@@ -3,6 +3,7 @@ package net.lenni0451.minijvm;
 import lombok.SneakyThrows;
 import net.lenni0451.commons.asm.provider.ClassProvider;
 import net.lenni0451.minijvm.context.ExecutionContext;
+import net.lenni0451.minijvm.execution.MethodExecutor;
 import net.lenni0451.minijvm.natives.*;
 import net.lenni0451.minijvm.object.*;
 import net.lenni0451.minijvm.stack.StackElement;
@@ -26,7 +27,7 @@ public class ExecutionManager {
     private final ClassProvider classProvider;
     private final Map<String, ExecutorClass> loadedClasses;
     private final Map<String, ClassClass> loadedClassClasses;
-    private final Map<String, NativeExecutor> nativeExecutors;
+    private final Map<String, MethodExecutor> nativeExecutors;
 
     public ExecutionManager(final ClassProvider classProvider) {
         this.classProvider = classProvider;
@@ -55,12 +56,12 @@ public class ExecutionManager {
         return this.classProvider;
     }
 
-    public Map<String, NativeExecutor> getNativeExecutors() {
+    public Map<String, MethodExecutor> getNativeExecutors() {
         return this.nativeExecutors;
     }
 
-    public void registerNativeExecutor(final String name, final NativeExecutor nativeExecutor) {
-        this.nativeExecutors.put(name, nativeExecutor);
+    public void registerNativeExecutor(final String name, final MethodExecutor methodExecutor) {
+        this.nativeExecutors.put(name, methodExecutor);
     }
 
     @SneakyThrows
