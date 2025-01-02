@@ -18,6 +18,7 @@ import org.objectweb.asm.tree.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 
 public class JVMMethodExecutor implements MethodExecutor {
@@ -804,7 +805,31 @@ public class JVMMethodExecutor implements MethodExecutor {
                     stack.popSized(); //The object stop synchronizing on
                     break; //TODO
                 case Opcodes.MULTIANEWARRAY:
-                    throw new UnsupportedOperationException(currentInstruction.getClass().getSimpleName() + " " + opcode); //TODO
+                    MultiANewArrayInsnNode multiANewArrayInsnNode = (MultiANewArrayInsnNode) currentInstruction;
+                    Type arrayType = Type.getType(multiANewArrayInsnNode.desc);
+                    Type elementType = arrayType.getElementType();
+                    if (arrayType.getSort() != Type.ARRAY && arrayType.getDimensions() != multiANewArrayInsnNode.dims) {
+                        throw new ExecutorException(executionContext, "Expected array type with " + multiANewArrayInsnNode.dims + " dimensions but got " + arrayType);
+                    }
+                    IntFunction<StackElement> arrayInitializer = null;
+                    for (int i = multiANewArrayInsnNode.dims - 1; i >= 1; i--) {
+                        int dimensions = stack.pop(StackInt.class).value();
+                        if (dimensions < 0) {
+                            result = ExceptionUtils.newException(executionManager, executionContext, Types.NEGATIVE_ARRAY_SIZE_EXCEPTION, "Dimension: " + dimensions);
+                            break;
+                        }
+                        ExecutorClass arrayClass = executionManager.loadClass(executionContext, Types.asArray(elementType, i));
+                        final IntFunction<StackElement> finalArrayInitializer = arrayInitializer;
+                        arrayInitializer = j -> {
+                            if (finalArrayInitializer == null) {
+                                return new StackObject(executionManager.instantiateArray(executionContext, arrayClass, dimensions));
+                            } else {
+                                return new StackObject(executionManager.instantiateArray(executionContext, arrayClass, dimensions, finalArrayInitializer));
+                            }
+                        };
+                    }
+                    stack.push(new StackObject(executionManager.instantiateArray(executionContext, executionManager.loadClass(executionContext, arrayType), stack.pop(StackInt.class).value(), arrayInitializer)));
+                    break;
                 case Opcodes.IFNULL:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
                     object = stack.pop(StackObject.class);
