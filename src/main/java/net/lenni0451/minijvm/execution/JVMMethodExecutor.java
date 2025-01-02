@@ -738,22 +738,17 @@ public class JVMMethodExecutor implements MethodExecutor {
                     IntInsnNode intInsnNode = (IntInsnNode) currentInstruction;
                     int length = stack.pop(StackInt.class).value();
                     switch (intInsnNode.operand) {
-                        case Opcodes.T_BOOLEAN ->
-                                stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(boolean[].class), length, () -> new StackInt(0)));
-                        case Opcodes.T_BYTE ->
-                                stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(byte[].class), length, () -> new StackInt(0)));
-                        case Opcodes.T_CHAR ->
-                                stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(char[].class), length, () -> new StackInt(0)));
-                        case Opcodes.T_SHORT ->
-                                stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(short[].class), length, () -> new StackInt(0)));
+                        //@formatter:off
+                        case Opcodes.T_BOOLEAN -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(boolean[].class), length, () -> new StackInt(0)));
+                        case Opcodes.T_BYTE -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(byte[].class), length, () -> new StackInt(0)));
+                        case Opcodes.T_CHAR -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(char[].class), length, () -> new StackInt(0)));
+                        case Opcodes.T_SHORT -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(short[].class), length, () -> new StackInt(0)));
                         case Opcodes.T_INT -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(int[].class), length, () -> new StackInt(0)));
-                        case Opcodes.T_LONG ->
-                                stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(long[].class), length, () -> new StackLong(0)));
-                        case Opcodes.T_FLOAT ->
-                                stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(float[].class), length, () -> new StackFloat(0)));
-                        case Opcodes.T_DOUBLE ->
-                                stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(double[].class), length, () -> new StackDouble(0)));
+                        case Opcodes.T_LONG -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(long[].class), length, () -> new StackLong(0)));
+                        case Opcodes.T_FLOAT -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(float[].class), length, () -> new StackFloat(0)));
+                        case Opcodes.T_DOUBLE -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(double[].class), length, () -> new StackDouble(0)));
                         default -> throw new ExecutorException(executionContext, "Unknown array type: " + intInsnNode.operand);
+                        //@formatter:on
                     }
                     break;
                 case Opcodes.ANEWARRAY:
