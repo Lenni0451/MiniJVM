@@ -3,6 +3,7 @@ package net.lenni0451.minijvm.execution;
 import net.lenni0451.commons.asm.Modifiers;
 import net.lenni0451.minijvm.ExecutionManager;
 import net.lenni0451.minijvm.context.ExecutionContext;
+import net.lenni0451.minijvm.exception.ExecutorException;
 import net.lenni0451.minijvm.object.ExecutorClass;
 import net.lenni0451.minijvm.object.ExecutorObject;
 import net.lenni0451.minijvm.stack.StackElement;
@@ -25,6 +26,11 @@ public class Executor {
         executionContext.pushStackFrame(currentClass, currentMethod, Modifiers.has(currentMethod.access, Opcodes.ACC_NATIVE) ? -2 : -1);
         MethodExecutor methodExecutor = executionManager.getMethodExecutor(executionContext, currentClass.getClassNode().name, currentMethod);
         ExecutionResult result = methodExecutor.execute(executionManager, executionContext, currentClass, currentMethod, instance, arguments);
+        if (!currentMethod.desc.endsWith("V") && !result.hasException() && !result.hasReturnValue()) {
+            throw new ExecutorException(executionContext, "Method " + currentClass.getClassNode().name + "." + currentMethod.name + currentMethod.desc + " did not return a value");
+        } else if (currentMethod.desc.endsWith("V") && result.hasReturnValue()) {
+            throw new ExecutorException(executionContext, "Void method " + currentClass.getClassNode().name + "." + currentMethod.name + currentMethod.desc + " returned a value");
+        }
         executionContext.popStackFrame();
         if (ExecutionManager.DEBUG) {
             System.out.println("----- Finished " + currentClass.getClassNode().name + " " + currentMethod.name + currentMethod.desc + " execution with result " + result + " -----");
