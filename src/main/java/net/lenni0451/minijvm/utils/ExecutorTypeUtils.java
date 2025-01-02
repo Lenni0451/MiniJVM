@@ -88,10 +88,10 @@ public class ExecutorTypeUtils {
     }
 
     public static String fromExecutorString(final ExecutionManager executionManager, final ExecutionContext executionContext, final ExecutorObject executorObject) {
-        if (!executorObject.getOwner().getClassNode().name.equals("java/lang/String")) {
+        if (!executorObject.getClazz().getClassNode().name.equals("java/lang/String")) {
             throw new IllegalArgumentException("The given executor object is not a string object");
         }
-        ExecutorClass.ResolvedMethod toCharArray = executorObject.getOwner().findMethod("toCharArray", "()[C");
+        ExecutorClass.ResolvedMethod toCharArray = executorObject.getClazz().findMethod("toCharArray", "()[C");
         StackObject valueArray = (StackObject) Executor.execute(executionManager, executionContext, toCharArray.owner(), toCharArray.method(), executorObject).getReturnValue();
         StringBuilder builder = new StringBuilder();
         for (StackElement element : ((ArrayObject) valueArray.value()).getElements()) {

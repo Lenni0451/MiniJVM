@@ -5,9 +5,11 @@ import org.objectweb.asm.Type;
 public class Types extends net.lenni0451.commons.asm.Types {
 
     public static final Type CLASS = Type.getType(Class.class);
+    public static final Type OBJECT = Type.getType(Object.class);
     public static final Type STRING = Type.getType(String.class);
     public static final Type BYTE_ARRAY = Type.getType(byte[].class);
     public static final Type CHAR_ARRAY = Type.getType(char[].class);
+    public static final Type THROWABLE = Type.getType(Throwable.class);
     public static final Type ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION = Type.getType(ArrayIndexOutOfBoundsException.class);
     public static final Type NO_SUCH_FIELD_ERROR = Type.getType(NoSuchFieldError.class);
     public static final Type NULL_POINTER_EXCEPTION = Type.getType(NullPointerException.class);
@@ -18,6 +20,7 @@ public class Types extends net.lenni0451.commons.asm.Types {
     public static final Type INTERNAL_ERROR = Type.getType(InternalError.class);
     public static final Type ILLEGAL_ARGUMENT_EXCEPTION = Type.getType(IllegalArgumentException.class);
     public static final Type NEGATIVE_ARRAY_SIZE_EXCEPTION = Type.getType(NegativeArraySizeException.class);
+    public static final Type CLASS_CAST_EXCEPTION = Type.getType(ClassCastException.class);
 
     public static Type asArray(final Type type, final int dimensions) {
         if (dimensions < 0) throw new IllegalArgumentException("Dimensions must be greater or equal to 0");

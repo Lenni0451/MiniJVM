@@ -12,8 +12,7 @@ import net.lenni0451.minijvm.object.ExecutorClass;
 import net.lenni0451.minijvm.object.ExecutorObject;
 import net.lenni0451.minijvm.object.types.ArrayObject;
 import net.lenni0451.minijvm.object.types.ClassObject;
-import net.lenni0451.minijvm.stack.StackElement;
-import net.lenni0451.minijvm.stack.StackObject;
+import net.lenni0451.minijvm.stack.*;
 import net.lenni0451.minijvm.utils.ExecutorTypeUtils;
 import net.lenni0451.minijvm.utils.Types;
 import org.objectweb.asm.Opcodes;
@@ -23,9 +22,8 @@ import org.objectweb.asm.tree.MethodNode;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.IntFunction;
 
 /**
  * This class is used to manage the classes and fields that are loaded by the executor.
@@ -33,8 +31,6 @@ import java.util.function.Supplier;
 public class ExecutionManager {
 
     public static final boolean DEBUG = true;
-    private static final Set<String> PRIMITIVE_CLASSES = Set.of("void", "boolean", "byte", "short", "char", "int", "long", "float", "double");
-    private static final Map<String, String> PRIMITIVE_DESCRIPTOR_TO_CLASS = Map.of("V", "void", "Z", "boolean", "B", "byte", "S", "short", "C", "char", "I", "int", "J", "long", "F", "float", "D", "double");
 
     private final ClassProvider classProvider;
     private final Map<Type, ExecutorClass> loadedClasses;
@@ -104,7 +100,7 @@ public class ExecutionManager {
         }
         ExecutorClass executorClass = new ExecutorClass(this, executionContext, type, classNode);
         this.loadedClasses.put(type, executorClass); //Add the class here to prevent infinite loops
-        executorClass.invokeStatic(this, executionContext);
+        executorClass.invokeStaticInit(this, executionContext);
         return executorClass;
     }
 
@@ -112,7 +108,7 @@ public class ExecutionManager {
         if (this.classInstances.containsKey(executorClass)) return this.classInstances.get(executorClass);
         ExecutorObject classInstance = new ClassObject(this, executionContext, executorClass);
         { //Component type
-            ExecutorClass.ResolvedField componentTypeField = classInstance.getOwner().findField("componentType", "Ljava/lang/Class;");
+            ExecutorClass.ResolvedField componentTypeField = classInstance.getClazz().findField("componentType", "Ljava/lang/Class;");
             if (componentTypeField != null) {
                 if (executorClass.getType().getSort() == Type.ARRAY) {
                     ExecutorClass componentTypeClass = this.loadClass(executionContext, Types.arrayType(executorClass.getType()));
@@ -123,7 +119,7 @@ public class ExecutionManager {
             }
         }
         { //Name
-            ExecutorClass.ResolvedField nameField = classInstance.getOwner().findField("name", "Ljava/lang/String;");
+            ExecutorClass.ResolvedField nameField = classInstance.getClazz().findField("name", "Ljava/lang/String;");
             if (nameField != null) {
                 classInstance.setField(nameField.field(), ExecutorTypeUtils.parse(this, executionContext, executorClass.getClassNode().name));
             }
@@ -133,21 +129,35 @@ public class ExecutionManager {
     }
 
     public ExecutorObject instantiate(final ExecutionContext executionContext, final ExecutorClass executorClass) {
-        ExecutorObject object = new ExecutorObject(this, executionContext, executorClass);
-        return object;
+        return new ExecutorObject(this, executionContext, executorClass);
     }
 
     public ExecutorObject instantiateArray(final ExecutionContext executionContext, final ExecutorClass executorClass, final int length) {
-        return new ArrayObject(this, executionContext, executorClass, new StackElement[length]);
+        IntFunction<StackElement> initializer = switch (executorClass.getType().getSort()) {
+            case Type.BOOLEAN -> i -> new StackInt(false);
+            case Type.CHAR -> i -> new StackInt(0);
+            case Type.BYTE -> i -> new StackInt(0);
+            case Type.SHORT -> i -> new StackInt(0);
+            case Type.INT -> i -> new StackInt(0);
+            case Type.FLOAT -> i -> new StackFloat(0);
+            case Type.LONG -> i -> new StackLong(0);
+            case Type.DOUBLE -> i -> new StackDouble(0);
+            default -> i -> StackObject.NULL;
+        };
+        return this.instantiateArray(executionContext, executorClass, length, initializer);
     }
 
     public ExecutorObject instantiateArray(final ExecutionContext executionContext, final ExecutorClass executorClass, final StackElement[] elements) {
-        return new ArrayObject(this, executionContext, executorClass, elements);
+        return this.instantiateArray(executionContext, executorClass, elements.length, i -> elements[i]);
     }
 
-    public ArrayObject instantiateArray(final ExecutionContext executionContext, final ExecutorClass executorClass, final int length, final Supplier<StackElement> elementSupplier) {
+    public ArrayObject instantiateArray(final ExecutionContext executionContext, final ExecutorClass executorClass, final int length, final IntFunction<StackElement> elementSupplier) {
+        if (executorClass.getType().getSort() != Type.ARRAY) {
+            throw new ExecutorException(executionContext, "Class is not an array: " + executorClass.getType());
+        }
+
         StackElement[] elements = new StackElement[length];
-        for (int i = 0; i < length; i++) elements[i] = elementSupplier.get();
+        for (int i = 0; i < length; i++) elements[i] = elementSupplier.apply(i);
         return new ArrayObject(this, executionContext, executorClass, elements);
     }
 

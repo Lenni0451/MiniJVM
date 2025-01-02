@@ -45,9 +45,9 @@ public class UnsafeNatives implements Consumer<ExecutionManager> {
             }));
         });
         manager.registerMethodExecutor("jdk/internal/misc/Unsafe.objectFieldOffset1(Ljava/lang/Class;Ljava/lang/String;)J", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
-            if (arguments[0] == StackObject.NULL) {
+            if (arguments[0].isNull()) {
                 return ExceptionUtils.newException(executionManager, executionContext, Types.NULL_POINTER_EXCEPTION, "class");
-            } else if (arguments[1] == StackObject.NULL) {
+            } else if (arguments[1].isNull()) {
                 return ExceptionUtils.newException(executionManager, executionContext, Types.NULL_POINTER_EXCEPTION, "name");
             }
             ExecutorClass executorClass = ((ClassObject) ((StackObject) arguments[0]).value()).getClassType();

@@ -4,4 +4,12 @@ public interface StackElement {
 
     int size();
 
+    default StackElement normalize() {
+        return this;
+    }
+
+    default boolean isNull() {
+        return false;
+    }
+
 }

@@ -7,8 +7,8 @@ import net.lenni0451.minijvm.ExecutionManager;
 import net.lenni0451.minijvm.context.ExecutionContext;
 import net.lenni0451.minijvm.execution.Executor;
 import net.lenni0451.minijvm.stack.StackElement;
-import net.lenni0451.minijvm.stack.StackObject;
 import net.lenni0451.minijvm.utils.ExecutorTypeUtils;
+import net.lenni0451.minijvm.utils.Types;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
@@ -63,13 +63,13 @@ public class ExecutorClass {
         for (FieldNode field : this.classNode.fields) {
             if (Modifiers.has(field.access, Opcodes.ACC_STATIC)) {
                 StackElement value = ExecutorTypeUtils.parse(executionManager, executionContext, field.value);
-                if (value == StackObject.NULL) value = ExecutorTypeUtils.getFieldDefault(ExecutorTypeUtils.typeToStackType(Type.getType(field.desc)));
+                if (value.isNull()) value = ExecutorTypeUtils.getFieldDefault(ExecutorTypeUtils.typeToStackType(Type.getType(field.desc)));
                 this.staticFields.put(field, value);
             }
         }
     }
 
-    public void invokeStatic(final ExecutionManager executionManager, final ExecutionContext executionContext) {
+    public void invokeStaticInit(final ExecutionManager executionManager, final ExecutionContext executionContext) {
         for (MethodNode method : this.classNode.methods) {
             if (Modifiers.has(method.access, Opcodes.ACC_STATIC) && method.name.equals("<clinit>")) {
                 Executor.execute(executionManager, executionContext, this, method, null);
@@ -77,8 +77,18 @@ public class ExecutorClass {
         }
     }
 
-    public boolean isInstance(final String className) {
-        return this.superClasses.containsKey(className);
+    public boolean isInstance(final ExecutionManager executionManager, final ExecutionContext executionContext, final Type type) {
+        if (this.type.getSort() == Type.ARRAY && type.getSort() == Type.ARRAY) {
+            if (type.getElementType().equals(Types.OBJECT)) {
+                return this.type.getDimensions() >= type.getDimensions();
+            } else if (this.type.getDimensions() != type.getDimensions()) {
+                return false;
+            } else {
+                ExecutorClass elementClass = executionManager.loadClass(executionContext, this.type.getElementType());
+                return elementClass.isInstance(executionManager, executionContext, type.getElementType());
+            }
+        }
+        return this.superClasses.containsKey(type.getInternalName());
     }
 
     @Nullable
@@ -111,7 +121,7 @@ public class ExecutorClass {
     public void setStaticField(final FieldNode field, final StackElement element) {
         for (ExecutorClass superClass : this.superClasses.values()) {
             if (superClass.staticFields.containsKey(field)) {
-                superClass.staticFields.put(field, element);
+                superClass.staticFields.put(field, element.normalize());
                 return;
             }
         }

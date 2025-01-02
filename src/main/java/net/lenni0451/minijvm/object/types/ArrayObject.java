@@ -10,8 +10,8 @@ public class ArrayObject extends ExecutorObject {
 
     private final StackElement[] elements;
 
-    public ArrayObject(final ExecutionManager executionManager, final ExecutionContext executionContext, final ExecutorClass arrayType, final StackElement[] elements) {
-        super(executionManager, executionContext, arrayType);
+    public ArrayObject(final ExecutionManager executionManager, final ExecutionContext executionContext, final ExecutorClass clazz, final StackElement[] elements) {
+        super(executionManager, executionContext, clazz);
         this.elements = elements;
     }
 
@@ -21,7 +21,7 @@ public class ArrayObject extends ExecutorObject {
 
     @Override
     public String toString() {
-        return "ArrayObject{" + this.getOwner().getClassNode().name + "=" + this.elements.length + "}";
+        return "ArrayObject{" + this.getClazz().getClassNode().name + "=" + this.elements.length + "}";
     }
 
 }

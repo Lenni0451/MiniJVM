@@ -45,7 +45,7 @@ public class ExecutionResult {
     @Override
     public String toString() {
         if (this.hasException()) {
-            return "ExecutionResult{exception=" + this.exception.getOwner().getClassNode().name + "}";
+            return "ExecutionResult{exception=" + this.exception.getClazz().getClassNode().name + "}";
         } else if (this.returnValue == null) {
             return "ExecutionResult{void}";
         } else {
