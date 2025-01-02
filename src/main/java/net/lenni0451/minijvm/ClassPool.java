@@ -68,7 +68,7 @@ public class ClassPool {
         for (int i = 0; i < methods.size(); i++) {
             MethodNode method = methods.get(i);
             JSRInlinerAdapter adapter = new JSRInlinerAdapter(method, method.access, method.name, method.desc, method.signature, method.exceptions == null ? null : method.exceptions.toArray(new String[0]));
-            method.accept(adapter);
+            method.accept(adapter); //Maybe remove this later if JSR is supported
             methods.set(i, adapter);
         }
         return classNode;
