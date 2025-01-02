@@ -7,12 +7,11 @@ import net.lenni0451.minijvm.stack.StackElement;
 import net.lenni0451.minijvm.stack.StackObject;
 import net.lenni0451.minijvm.utils.ExecutorTypeUtils;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldNode;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static net.lenni0451.commons.asm.Types.type;
 
 public class ExecutorObject {
 
@@ -31,7 +30,7 @@ public class ExecutorObject {
             for (FieldNode field : executorClass.getClassNode().fields) {
                 if (Modifiers.has(field.access, Opcodes.ACC_STATIC)) continue;
                 StackElement value = ExecutorTypeUtils.parse(executionManager, executionContext, field.value);
-                if (value == StackObject.NULL) value = ExecutorTypeUtils.getFieldDefault(ExecutorTypeUtils.typeToStackType(type(field)));
+                if (value == StackObject.NULL) value = ExecutorTypeUtils.getFieldDefault(ExecutorTypeUtils.typeToStackType(Type.getType(field.desc)));
                 this.fields.put(field, value);
             }
         }

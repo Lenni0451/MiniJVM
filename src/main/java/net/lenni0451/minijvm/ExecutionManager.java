@@ -15,7 +15,9 @@ import net.lenni0451.minijvm.object.types.ClassObject;
 import net.lenni0451.minijvm.stack.StackElement;
 import net.lenni0451.minijvm.stack.StackObject;
 import net.lenni0451.minijvm.utils.ExecutorTypeUtils;
+import net.lenni0451.minijvm.utils.Types;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
@@ -35,7 +37,7 @@ public class ExecutionManager {
     private static final Map<String, String> PRIMITIVE_DESCRIPTOR_TO_CLASS = Map.of("V", "void", "Z", "boolean", "B", "byte", "S", "short", "C", "char", "I", "int", "J", "long", "F", "float", "D", "double");
 
     private final ClassProvider classProvider;
-    private final Map<String, ExecutorClass> loadedClasses;
+    private final Map<Type, ExecutorClass> loadedClasses;
     private final Map<ExecutorClass, ExecutorObject> classInstances;
     private final Map<String, MethodExecutor> methodExecutors;
 
@@ -66,8 +68,8 @@ public class ExecutionManager {
         consumer.accept(this);
     }
 
-    public void registerMethodExecutor(final String name, final MethodExecutor methodExecutor) {
-        this.methodExecutors.put(name, methodExecutor);
+    public void registerMethodExecutor(final String classMethodDescriptor, final MethodExecutor methodExecutor) {
+        this.methodExecutors.put(classMethodDescriptor, methodExecutor);
     }
 
     public MethodExecutor getMethodExecutor(final ExecutionContext executionContext, final String owner, final MethodNode methodNode) {
@@ -81,31 +83,27 @@ public class ExecutionManager {
     }
 
     @SneakyThrows
-    public ExecutorClass loadClass(final ExecutionContext executionContext, final String name) {
-        if (this.loadedClasses.containsKey(name)) return this.loadedClasses.get(name);
+    public ExecutorClass loadClass(final ExecutionContext executionContext, final Type type) {
+        if (this.loadedClasses.containsKey(type)) return this.loadedClasses.get(type);
         ClassNode classNode;
-        if (PRIMITIVE_CLASSES.contains(name)) {
+        if (type.getSort() >= Type.VOID && type.getSort() <= Type.DOUBLE) {
             classNode = new ClassNode();
-            classNode.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, name, null, null, null);
-        } else if (name.startsWith("[")) {
-            String elementName = name;
-            while (elementName.startsWith("[")) elementName = elementName.substring(1);
-            if ((!elementName.startsWith("L") || !elementName.endsWith(";")) && elementName.length() != 1) {
-                throw new ExecutorException(executionContext, "Invalid array element type: " + name);
+            classNode.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, type.getClassName(), null, null, null);
+        } else if (type.getSort() == Type.ARRAY) {
+            if (type.getElementType().equals(Type.VOID_TYPE)) {
+                throw new ExecutorException(executionContext, "Invalid array element type: " + type.getElementType());
             }
 
             classNode = new ClassNode();
-            classNode.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, name, null, "java/lang/Object", new String[]{"java/lang/Cloneable", "java/io/Serializable"});
+            classNode.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, type.getInternalName(), null, "java/lang/Object", new String[]{"java/lang/Cloneable", "java/io/Serializable"});
+        } else if (type.getSort() == Type.OBJECT) {
+            classNode = this.classProvider.getClassNode(type.getInternalName());
+            if (classNode == null) throw new ClassNotFoundException(type.getClassName());
         } else {
-            if ((name.startsWith("L") && name.endsWith(";")) || name.contains(".")) {
-                throw new ExecutorException(executionContext, "Invalid class name: " + name);
-            }
-
-            classNode = this.classProvider.getClassNode(name);
+            throw new ExecutorException(executionContext, "Unsupported type: " + type.getSort() + " (" + type + ")");
         }
-        if (classNode == null) throw new ClassNotFoundException(name);
-        ExecutorClass executorClass = new ExecutorClass(this, executionContext, classNode);
-        this.loadedClasses.put(name, executorClass); //Add the class here to prevent infinite loops
+        ExecutorClass executorClass = new ExecutorClass(this, executionContext, type, classNode);
+        this.loadedClasses.put(type, executorClass); //Add the class here to prevent infinite loops
         executorClass.invokeStatic(this, executionContext);
         return executorClass;
     }
@@ -116,10 +114,8 @@ public class ExecutionManager {
         { //Component type
             ExecutorClass.ResolvedField componentTypeField = classInstance.getOwner().findField("componentType", "Ljava/lang/Class;");
             if (componentTypeField != null) {
-                if (executorClass.getClassNode().name.startsWith("[")) {
-                    String componentType = executorClass.getClassNode().name.substring(1);
-                    if (!componentType.startsWith("[") & componentType.length() > 1) componentType = componentType.substring(1, componentType.length() - 1);
-                    ExecutorClass componentTypeClass = this.loadClass(executionContext, PRIMITIVE_DESCRIPTOR_TO_CLASS.getOrDefault(componentType, componentType));
+                if (executorClass.getType().getSort() == Type.ARRAY) {
+                    ExecutorClass componentTypeClass = this.loadClass(executionContext, Types.arrayType(executorClass.getType()));
                     classInstance.setField(componentTypeField.field(), new StackObject(this.instantiateClass(executionContext, componentTypeClass)));
                 } else {
                     classInstance.setField(componentTypeField.field(), StackObject.NULL);

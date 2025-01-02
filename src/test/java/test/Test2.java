@@ -7,6 +7,7 @@ import net.lenni0451.minijvm.execution.ExecutionResult;
 import net.lenni0451.minijvm.execution.Executor;
 import net.lenni0451.minijvm.object.ExecutorClass;
 import net.lenni0451.minijvm.stack.StackDouble;
+import org.objectweb.asm.Type;
 
 public class Test2 {
 
@@ -15,7 +16,7 @@ public class Test2 {
         ExecutionContext context = new ExecutionContext();
 
         final double d = 1 / 0.75;
-        ExecutorClass test4Class = manager.loadClass(context, "test/Test2");
+        ExecutorClass test4Class = manager.loadClass(context, Type.getType(Test2.class));
         ExecutorClass.ResolvedMethod doitMethod = test4Class.findMethod("doit", "(D)D");
         ExecutionResult result = Executor.execute(manager, context, test4Class, doitMethod.method(), null, new StackDouble(d));
         System.out.println(result);
@@ -23,6 +24,8 @@ public class Test2 {
     }
 
     public static double doit(final double a) {
+        //Those math operations only work in Java version which don't implement them as native methods but with Java code
+        //They typically are marked as intrinsic methods if implemented in Java
         return Math.fma(a, 2, 45) + Math.expm1(a) * Math.log1p(a) - Math.sin(a) * Math.cos(a);
     }
 

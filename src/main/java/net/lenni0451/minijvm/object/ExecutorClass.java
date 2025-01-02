@@ -10,6 +10,7 @@ import net.lenni0451.minijvm.stack.StackElement;
 import net.lenni0451.minijvm.stack.StackObject;
 import net.lenni0451.minijvm.utils.ExecutorTypeUtils;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -19,15 +20,15 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static net.lenni0451.commons.asm.Types.type;
-
 public class ExecutorClass {
 
+    private final Type type;
     private final ClassNode classNode;
     final Map<String, ExecutorClass> superClasses;
     private final Map<FieldNode, StackElement> staticFields;
 
-    public ExecutorClass(final ExecutionManager executionManager, final ExecutionContext executionContext, final ClassNode classNode) {
+    public ExecutorClass(final ExecutionManager executionManager, final ExecutionContext executionContext, final Type type, final ClassNode classNode) {
+        this.type = type;
         this.classNode = classNode;
         this.superClasses = new LinkedHashMap<>();
         this.staticFields = new HashMap<>();
@@ -36,16 +37,24 @@ public class ExecutorClass {
         this.initFields(executionManager, executionContext);
     }
 
+    public Type getType() {
+        return this.type;
+    }
+
+    public ClassNode getClassNode() {
+        return this.classNode;
+    }
+
     @SneakyThrows
     private void initSuperClasses(final ExecutionManager executionManager, final ExecutionContext executionContext) {
         this.superClasses.put(this.classNode.name, this);
         for (String itf : this.classNode.interfaces) {
-            this.superClasses.put(itf, executionManager.loadClass(executionContext, itf));
+            this.superClasses.put(itf, executionManager.loadClass(executionContext, Type.getObjectType(itf)));
         }
 
         ExecutorClass superClass = this;
         while (superClass.classNode.superName != null) {
-            superClass = executionManager.loadClass(executionContext, superClass.classNode.superName);
+            superClass = executionManager.loadClass(executionContext, Type.getObjectType(superClass.classNode.superName));
             this.superClasses.putAll(superClass.superClasses);
         }
     }
@@ -54,14 +63,10 @@ public class ExecutorClass {
         for (FieldNode field : this.classNode.fields) {
             if (Modifiers.has(field.access, Opcodes.ACC_STATIC)) {
                 StackElement value = ExecutorTypeUtils.parse(executionManager, executionContext, field.value);
-                if (value == StackObject.NULL) value = ExecutorTypeUtils.getFieldDefault(ExecutorTypeUtils.typeToStackType(type(field)));
+                if (value == StackObject.NULL) value = ExecutorTypeUtils.getFieldDefault(ExecutorTypeUtils.typeToStackType(Type.getType(field.desc)));
                 this.staticFields.put(field, value);
             }
         }
-    }
-
-    public ClassNode getClassNode() {
-        return this.classNode;
     }
 
     public void invokeStatic(final ExecutionManager executionManager, final ExecutionContext executionContext) {

@@ -7,6 +7,7 @@ import net.lenni0451.minijvm.stack.StackInt;
 import net.lenni0451.minijvm.stack.StackLong;
 import net.lenni0451.minijvm.stack.StackObject;
 import net.lenni0451.minijvm.utils.ExceptionUtils;
+import net.lenni0451.minijvm.utils.Types;
 
 import java.util.function.Consumer;
 
@@ -25,21 +26,21 @@ public class SystemNatives implements Consumer<ExecutionManager> {
             StackInt destPos = (StackInt) arguments[3];
             StackInt length = (StackInt) arguments[4];
             if (src == null) {
-                return ExceptionUtils.newException(executionManager, executionContext, "java/lang/NullPointerException", "src");
+                return ExceptionUtils.newException(executionManager, executionContext, Types.NULL_POINTER_EXCEPTION, "src");
             }
             if (dest == null) {
-                return ExceptionUtils.newException(executionManager, executionContext, "java/lang/NullPointerException", "dest");
+                return ExceptionUtils.newException(executionManager, executionContext, Types.NULL_POINTER_EXCEPTION, "dest");
             }
             ArrayObject srcArray = (ArrayObject) src.value();
             ArrayObject destArray = (ArrayObject) dest.value();
             if (srcPos.value() < 0 || srcPos.value() + length.value() > srcArray.getElements().length) {
-                return ExceptionUtils.newException(executionManager, executionContext, "java/lang/ArrayIndexOutOfBoundsException", "srcPos");
+                return ExceptionUtils.newException(executionManager, executionContext, Types.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION, "srcPos");
             }
             if (destPos.value() < 0 || destPos.value() + length.value() > destArray.getElements().length) {
-                return ExceptionUtils.newException(executionManager, executionContext, "java/lang/ArrayIndexOutOfBoundsException", "destPos");
+                return ExceptionUtils.newException(executionManager, executionContext, Types.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION, "destPos");
             }
             if (length.value() < 0) {
-                return ExceptionUtils.newException(executionManager, executionContext, "java/lang/ArrayIndexOutOfBoundsException", "length");
+                return ExceptionUtils.newException(executionManager, executionContext, Types.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION, "length");
             }
             //TODO: Component type check
             System.arraycopy(srcArray.getElements(), srcPos.value(), destArray.getElements(), destPos.value(), length.value());

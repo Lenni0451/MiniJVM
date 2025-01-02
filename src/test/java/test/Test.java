@@ -12,6 +12,7 @@ import net.lenni0451.minijvm.stack.StackElement;
 import net.lenni0451.minijvm.stack.StackObject;
 import net.lenni0451.minijvm.utils.ExecutorTypeUtils;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.util.HashMap;
@@ -40,8 +41,8 @@ public class Test {
 
             ExecutionManager manager = new ExecutionManager(new MapClassProvider(classes, MapClassProvider.NameFormat.SLASH).then(new LoaderClassProvider()));
             ExecutionContext context = new ExecutionContext();
-            ExecutorClass clazz = manager.loadClass(context, "Test");
-            StackElement returnValue = Executor.execute(manager, context, clazz, methodNode, null, new StackElement[]{}).getReturnValue();
+            ExecutorClass clazz = manager.loadClass(context, Type.getObjectType("Test"));
+            StackElement returnValue = Executor.execute(manager, context, clazz, methodNode, null).getReturnValue();
             System.out.println(returnValue);
             System.out.println(ExecutorTypeUtils.fromExecutorString(manager, context, ((StackObject) returnValue).value()));
         } catch (ExecutorException e) {

@@ -9,6 +9,7 @@ import net.lenni0451.minijvm.stack.StackLong;
 import net.lenni0451.minijvm.stack.StackObject;
 import net.lenni0451.minijvm.utils.ExceptionUtils;
 import net.lenni0451.minijvm.utils.ExecutorTypeUtils;
+import net.lenni0451.minijvm.utils.Types;
 import net.lenni0451.minijvm.utils.UnsafeUtils;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldNode;
@@ -45,15 +46,15 @@ public class UnsafeNatives implements Consumer<ExecutionManager> {
         });
         manager.registerMethodExecutor("jdk/internal/misc/Unsafe.objectFieldOffset1(Ljava/lang/Class;Ljava/lang/String;)J", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
             if (arguments[0] == StackObject.NULL) {
-                return ExceptionUtils.newException(executionManager, executionContext, "java/lang/NullPointerException", "class");
+                return ExceptionUtils.newException(executionManager, executionContext, Types.NULL_POINTER_EXCEPTION, "class");
             } else if (arguments[1] == StackObject.NULL) {
-                return ExceptionUtils.newException(executionManager, executionContext, "java/lang/NullPointerException", "name");
+                return ExceptionUtils.newException(executionManager, executionContext, Types.NULL_POINTER_EXCEPTION, "name");
             }
             ExecutorClass executorClass = ((ClassObject) ((StackObject) arguments[0]).value()).getClassType();
             String fieldName = ExecutorTypeUtils.fromExecutorString(executionManager, executionContext, ((StackObject) arguments[1]).value());
             FieldNode fieldNode = UnsafeUtils.getFieldByName(executorClass, fieldName);
             if (fieldNode == null) {
-                return ExceptionUtils.newException(executionManager, executionContext, "java/lang/InternalError", fieldName);
+                return ExceptionUtils.newException(executionManager, executionContext, Types.INTERNAL_ERROR, fieldName);
             }
             return returnValue(new StackLong(UnsafeUtils.getFieldHashCode(fieldNode)));
         });

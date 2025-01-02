@@ -15,6 +15,8 @@ import org.objectweb.asm.Type;
 import javax.annotation.Nullable;
 import java.util.function.Supplier;
 
+import static net.lenni0451.minijvm.utils.Types.*;
+
 public class ExecutorTypeUtils {
 
     public static StackElement parse(final ExecutionManager executionManager, final ExecutionContext executionContext, final Object jvmObject) {
@@ -28,23 +30,23 @@ public class ExecutorTypeUtils {
         } else if (jvmObject instanceof Double d) {
             return new StackDouble(d);
         } else if (jvmObject instanceof String s) {
-            ExecutorClass stringClass = executionManager.loadClass(executionContext, "java/lang/String");
+            ExecutorClass stringClass = executionManager.loadClass(executionContext, STRING);
             ExecutorObject stringObject = executionManager.instantiate(executionContext, stringClass);
             if (s.isEmpty()) {
                 //TODO: Find out what to actually do with empty strings
                 ExecutorClass.ResolvedField valueField = stringClass.findField("value", "[B");
-                stringObject.setField(valueField.field(), new StackObject(executionManager.instantiateArray(executionContext, executionManager.loadClass(executionContext, "[B"), new StackElement[0])));
+                stringObject.setField(valueField.field(), new StackObject(executionManager.instantiateArray(executionContext, executionManager.loadClass(executionContext, BYTE_ARRAY), new StackElement[0])));
             } else {
                 char[] value = s.toCharArray();
                 StackElement[] valueArray = new StackElement[value.length];
                 for (int i = 0; i < value.length; i++) valueArray[i] = new StackInt(value[i]);
-                ExecutorClass arrayClass = executionManager.loadClass(executionContext, "[C");
+                ExecutorClass arrayClass = executionManager.loadClass(executionContext, CHAR_ARRAY);
                 ExecutorObject arrayObject = executionManager.instantiateArray(executionContext, arrayClass, valueArray);
-                Executor.execute(executionManager, executionContext, stringClass, ASMUtils.getMethod(stringClass.getClassNode(), "<init>", "([C)V"), stringObject, new StackElement[]{new StackObject(arrayObject)});
+                Executor.execute(executionManager, executionContext, stringClass, ASMUtils.getMethod(stringClass.getClassNode(), "<init>", "([C)V"), stringObject, new StackObject(arrayObject));
             }
             return new StackObject(stringObject);
         } else if (jvmObject instanceof Type t) {
-            ExecutorClass typeClass = executionManager.loadClass(executionContext, t.getInternalName());
+            ExecutorClass typeClass = executionManager.loadClass(executionContext, t);
             return new StackObject(executionManager.instantiateClass(executionContext, typeClass));
         } else if (jvmObject instanceof Handle) {
             //TODO: Convert to executor object
@@ -90,7 +92,7 @@ public class ExecutorTypeUtils {
             throw new IllegalArgumentException("The given executor object is not a string object");
         }
         ExecutorClass.ResolvedMethod toCharArray = executorObject.getOwner().findMethod("toCharArray", "()[C");
-        StackObject valueArray = (StackObject) Executor.execute(executionManager, executionContext, toCharArray.owner(), toCharArray.method(), executorObject, new StackElement[0]).getReturnValue();
+        StackObject valueArray = (StackObject) Executor.execute(executionManager, executionContext, toCharArray.owner(), toCharArray.method(), executorObject).getReturnValue();
         StringBuilder builder = new StringBuilder();
         for (StackElement element : ((ArrayObject) valueArray.value()).getElements()) {
             builder.append((char) ((StackInt) element).value());
@@ -107,7 +109,7 @@ public class ExecutorTypeUtils {
     }
 
     public static StackObject newArray(final ExecutionManager executionManager, final ExecutionContext executionContext, final Type type, final StackElement[] elements) {
-        ExecutorClass arrayClass = executionManager.loadClass(executionContext, type.getDescriptor());
+        ExecutorClass arrayClass = executionManager.loadClass(executionContext, type);
         ExecutorObject arrayObject = executionManager.instantiateArray(executionContext, arrayClass, elements);
         return new StackObject(arrayObject);
     }

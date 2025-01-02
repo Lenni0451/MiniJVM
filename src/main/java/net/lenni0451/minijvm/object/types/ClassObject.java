@@ -4,13 +4,14 @@ import net.lenni0451.minijvm.ExecutionManager;
 import net.lenni0451.minijvm.context.ExecutionContext;
 import net.lenni0451.minijvm.object.ExecutorClass;
 import net.lenni0451.minijvm.object.ExecutorObject;
+import net.lenni0451.minijvm.utils.Types;
 
 public class ClassObject extends ExecutorObject {
 
     private final ExecutorClass classType;
 
     public ClassObject(final ExecutionManager executionManager, final ExecutionContext executionContext, final ExecutorClass classType) {
-        super(executionManager, executionContext, executionManager.loadClass(executionContext, "java/lang/Class"));
+        super(executionManager, executionContext, executionManager.loadClass(executionContext, Types.CLASS));
         this.classType = classType;
     }
 
