@@ -32,13 +32,17 @@ public class ExecutionManager {
 
     public static final boolean DEBUG = true;
 
-    private final ClassProvider classProvider;
+    private final ClassPool classPool;
     private final Map<Type, ExecutorClass> loadedClasses;
     private final Map<ExecutorClass, ExecutorObject> classInstances;
     private final Map<String, MethodExecutor> methodExecutors;
 
     public ExecutionManager(final ClassProvider classProvider) {
-        this.classProvider = classProvider;
+        this(new ClassPool(classProvider));
+    }
+
+    public ExecutionManager(final ClassPool classPool) {
+        this.classPool = classPool;
         this.loadedClasses = new HashMap<>();
         this.classInstances = new HashMap<>();
         this.methodExecutors = new HashMap<>();
@@ -93,7 +97,7 @@ public class ExecutionManager {
             classNode = new ClassNode();
             classNode.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, type.getInternalName(), null, "java/lang/Object", new String[]{"java/lang/Cloneable", "java/io/Serializable"});
         } else if (type.getSort() == Type.OBJECT) {
-            classNode = this.classProvider.getClassNode(type.getInternalName());
+            classNode = this.classPool.getClassNode(type.getInternalName());
             if (classNode == null) throw new ClassNotFoundException(type.getClassName());
         } else {
             throw new ExecutorException(executionContext, "Unsupported type: " + type.getSort() + " (" + type + ")");
