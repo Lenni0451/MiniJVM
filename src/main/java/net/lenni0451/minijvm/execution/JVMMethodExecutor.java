@@ -31,7 +31,6 @@ public class JVMMethodExecutor implements MethodExecutor {
             if (!isStatic) locals.put(0, new StackObject(instance));
             int currentIndex = isStatic ? 0 : 1;
             for (StackElement argument : arguments) {
-                //TODO: Verification: Check if some method overwrites 2 wide locals
                 locals.put(currentIndex, argument);
                 currentIndex += argument.size();
             }
@@ -843,51 +842,14 @@ public class JVMMethodExecutor implements MethodExecutor {
     }
 
     private static Class<? extends StackElement> getTypeFromOpcode(final int opcode) {
-        switch (opcode) {
-            case Opcodes.ILOAD:
-            case Opcodes.ISTORE:
-                return StackInt.class;
-            case Opcodes.LLOAD:
-            case Opcodes.LSTORE:
-                return StackLong.class;
-            case Opcodes.FLOAD:
-            case Opcodes.FSTORE:
-                return StackFloat.class;
-            case Opcodes.DLOAD:
-            case Opcodes.DSTORE:
-                return StackDouble.class;
-            case Opcodes.ALOAD:
-            case Opcodes.ASTORE:
-                return StackObject.class;
-        }
-        throw new IllegalStateException("Unknown opcode: " + opcode);
-    }
-
-    private static Class<? extends StackElement> getArrayTypeFromOpcode(final int opcode) {
-        switch (opcode) {
-            case Opcodes.IALOAD:
-            case Opcodes.IASTORE:
-            case Opcodes.BALOAD:
-            case Opcodes.BASTORE:
-            case Opcodes.CALOAD:
-            case Opcodes.CASTORE:
-            case Opcodes.SALOAD:
-            case Opcodes.SASTORE:
-                return StackInt.class;
-            case Opcodes.LALOAD:
-            case Opcodes.LASTORE:
-                return StackLong.class;
-            case Opcodes.FALOAD:
-            case Opcodes.FASTORE:
-                return StackFloat.class;
-            case Opcodes.DALOAD:
-            case Opcodes.DASTORE:
-                return StackDouble.class;
-            case Opcodes.AALOAD:
-            case Opcodes.AASTORE:
-                return StackObject.class;
-        }
-        throw new IllegalStateException("Unknown opcode: " + opcode);
+        return switch (opcode) {
+            case Opcodes.ILOAD, Opcodes.ISTORE -> StackInt.class;
+            case Opcodes.LLOAD, Opcodes.LSTORE -> StackLong.class;
+            case Opcodes.FLOAD, Opcodes.FSTORE -> StackFloat.class;
+            case Opcodes.DLOAD, Opcodes.DSTORE -> StackDouble.class;
+            case Opcodes.ALOAD, Opcodes.ASTORE -> StackObject.class;
+            default -> throw new IllegalStateException("Unknown opcode: " + opcode);
+        };
     }
 
     private static void verifyType(final ExecutionContext executionContext, final StackElement element, final Class<? extends StackElement> expectedType) {
