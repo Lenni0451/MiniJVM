@@ -53,26 +53,46 @@ public class JVMMethodExecutor implements MethodExecutor {
                     stack.push(StackObject.NULL);
                     break;
                 case Opcodes.ICONST_M1:
+                    stack.push(StackInt.MINUS1);
+                    break;
                 case Opcodes.ICONST_0:
+                    stack.push(StackInt.ZERO);
+                    break;
                 case Opcodes.ICONST_1:
+                    stack.push(StackInt.ONE);
+                    break;
                 case Opcodes.ICONST_2:
+                    stack.push(StackInt.TWO);
+                    break;
                 case Opcodes.ICONST_3:
+                    stack.push(StackInt.THREE);
+                    break;
                 case Opcodes.ICONST_4:
+                    stack.push(StackInt.FOUR);
+                    break;
                 case Opcodes.ICONST_5:
-                    stack.push(new StackInt(opcode - Opcodes.ICONST_0));
+                    stack.push(StackInt.FIVE);
                     break;
                 case Opcodes.LCONST_0:
+                    stack.push(StackLong.ZERO);
+                    break;
                 case Opcodes.LCONST_1:
-                    stack.push(new StackLong(opcode - Opcodes.LCONST_0));
+                    stack.push(StackLong.ONE);
                     break;
                 case Opcodes.FCONST_0:
+                    stack.push(StackFloat.ZERO);
+                    break;
                 case Opcodes.FCONST_1:
+                    stack.push(StackFloat.ONE);
+                    break;
                 case Opcodes.FCONST_2:
-                    stack.push(new StackFloat(opcode - Opcodes.FCONST_0));
+                    stack.push(StackFloat.TWO);
                     break;
                 case Opcodes.DCONST_0:
+                    stack.push(StackDouble.ZERO);
+                    break;
                 case Opcodes.DCONST_1:
-                    stack.push(new StackDouble(opcode - Opcodes.DCONST_0));
+                    stack.push(StackDouble.ONE);
                     break;
                 case Opcodes.BIPUSH:
                 case Opcodes.SIPUSH:
@@ -425,25 +445,25 @@ public class JVMMethodExecutor implements MethodExecutor {
                 case Opcodes.FCMPL:
                     float1 = stack.pop(StackFloat.class);
                     float2 = stack.pop(StackFloat.class);
-                    if (Float.isNaN(float1.value()) || Float.isNaN(float2.value())) stack.push(new StackInt(-1));
+                    if (Float.isNaN(float1.value()) || Float.isNaN(float2.value())) stack.push(StackInt.MINUS1);
                     stack.push(new StackInt(Float.compare(float2.value(), float1.value())));
                     break;
                 case Opcodes.FCMPG:
                     float1 = stack.pop(StackFloat.class);
                     float2 = stack.pop(StackFloat.class);
-                    if (Float.isNaN(float1.value()) || Float.isNaN(float2.value())) stack.push(new StackInt(1));
+                    if (Float.isNaN(float1.value()) || Float.isNaN(float2.value())) stack.push(StackInt.ONE);
                     stack.push(new StackInt(Float.compare(float2.value(), float1.value())));
                     break;
                 case Opcodes.DCMPL:
                     double1 = stack.pop(StackDouble.class);
                     double2 = stack.pop(StackDouble.class);
-                    if (Double.isNaN(double1.value()) || Double.isNaN(double2.value())) stack.push(new StackInt(-1));
+                    if (Double.isNaN(double1.value()) || Double.isNaN(double2.value())) stack.push(StackInt.MINUS1);
                     stack.push(new StackInt(Double.compare(double2.value(), double1.value())));
                     break;
                 case Opcodes.DCMPG:
                     double1 = stack.pop(StackDouble.class);
                     double2 = stack.pop(StackDouble.class);
-                    if (Double.isNaN(double1.value()) || Double.isNaN(double2.value())) stack.push(new StackInt(1));
+                    if (Double.isNaN(double1.value()) || Double.isNaN(double2.value())) stack.push(StackInt.ONE);
                     stack.push(new StackInt(Double.compare(double2.value(), double1.value())));
                     break;
                 case Opcodes.IFEQ:
@@ -741,14 +761,14 @@ public class JVMMethodExecutor implements MethodExecutor {
                     int length = stack.pop(StackInt.class).value();
                     switch (intInsnNode.operand) {
                         //@formatter:off
-                        case Opcodes.T_BOOLEAN -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(boolean[].class), length, () -> new StackInt(0)));
-                        case Opcodes.T_BYTE -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(byte[].class), length, () -> new StackInt(0)));
-                        case Opcodes.T_CHAR -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(char[].class), length, () -> new StackInt(0)));
-                        case Opcodes.T_SHORT -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(short[].class), length, () -> new StackInt(0)));
-                        case Opcodes.T_INT -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(int[].class), length, () -> new StackInt(0)));
-                        case Opcodes.T_LONG -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(long[].class), length, () -> new StackLong(0)));
-                        case Opcodes.T_FLOAT -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(float[].class), length, () -> new StackFloat(0)));
-                        case Opcodes.T_DOUBLE -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(double[].class), length, () -> new StackDouble(0)));
+                        case Opcodes.T_BOOLEAN -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(boolean[].class), length, () -> StackInt.ZERO));
+                        case Opcodes.T_BYTE -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(byte[].class), length, () -> StackInt.ZERO));
+                        case Opcodes.T_CHAR -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(char[].class), length, () -> StackInt.ZERO));
+                        case Opcodes.T_SHORT -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(short[].class), length, () -> StackInt.ZERO));
+                        case Opcodes.T_INT -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(int[].class), length, () -> StackInt.ZERO));
+                        case Opcodes.T_LONG -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(long[].class), length, () -> StackLong.ZERO));
+                        case Opcodes.T_FLOAT -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(float[].class), length, () -> StackFloat.ZERO));
+                        case Opcodes.T_DOUBLE -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(double[].class), length, () -> StackDouble.ZERO));
                         default -> throw new ExecutorException(executionContext, "Unknown array type: " + intInsnNode.operand);
                         //@formatter:on
                     }
@@ -789,10 +809,10 @@ public class JVMMethodExecutor implements MethodExecutor {
                     typeInsnNode = (TypeInsnNode) currentInstruction;
                     object = stack.pop(StackObject.class);
                     if (object.isNull()) {
-                        stack.push(new StackInt(0));
+                        stack.push(StackInt.ZERO);
                     } else {
                         boolean isInstance = object.value().getClazz().isInstance(executionManager, executionContext, Type.getObjectType(typeInsnNode.desc));
-                        stack.push(new StackInt(isInstance ? 1 : 0));
+                        stack.push(isInstance ? StackInt.ONE : StackInt.ZERO);
                     }
                     break;
                 case Opcodes.MONITORENTER:

@@ -142,14 +142,14 @@ public class ExecutionManager {
 
     public ExecutorObject instantiateArray(final ExecutionContext executionContext, final ExecutorClass executorClass, final int length) {
         IntFunction<StackElement> initializer = switch (executorClass.getType().getSort()) {
-            case Type.BOOLEAN -> i -> new StackInt(false);
-            case Type.CHAR -> i -> new StackInt(0);
-            case Type.BYTE -> i -> new StackInt(0);
-            case Type.SHORT -> i -> new StackInt(0);
-            case Type.INT -> i -> new StackInt(0);
-            case Type.FLOAT -> i -> new StackFloat(0);
-            case Type.LONG -> i -> new StackLong(0);
-            case Type.DOUBLE -> i -> new StackDouble(0);
+            case Type.BOOLEAN -> i -> StackInt.ZERO;
+            case Type.CHAR -> i -> StackInt.ZERO;
+            case Type.BYTE -> i -> StackInt.ZERO;
+            case Type.SHORT -> i -> StackInt.ZERO;
+            case Type.INT -> i -> StackInt.ZERO;
+            case Type.FLOAT -> i -> StackFloat.ZERO;
+            case Type.LONG -> i -> StackLong.ZERO;
+            case Type.DOUBLE -> i -> StackDouble.ZERO;
             default -> i -> StackObject.NULL;
         };
         return this.instantiateArray(executionContext, executorClass, length, initializer);

@@ -34,6 +34,8 @@ public class Test {
             methodNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false));
             methodNode.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;", false));
             methodNode.instructions.add(new InsnNode(Opcodes.ARETURN));
+            methodNode.maxStack = 20;
+            methodNode.maxLocals = 20;
             node.methods.add(methodNode);
 
             Map<String, byte[]> classes = new HashMap<>();

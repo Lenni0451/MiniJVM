@@ -12,7 +12,7 @@ public class StringUTF16Natives implements Consumer<ExecutionManager> {
     @Override
     public void accept(ExecutionManager manager) {
         manager.registerMethodExecutor("java/lang/StringUTF16.isBigEndian()Z", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
-            return returnValue(new StackInt(0));
+            return returnValue(StackInt.ZERO);
         });
     }
 

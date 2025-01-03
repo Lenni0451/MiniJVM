@@ -73,13 +73,13 @@ public class ExecutorTypeUtils {
 
     public static StackElement getFieldDefault(final Class<? extends StackElement> type) {
         if (type.equals(StackInt.class)) {
-            return new StackInt(0);
+            return StackInt.ZERO;
         } else if (type.equals(StackLong.class)) {
-            return new StackLong(0);
+            return StackLong.ZERO;
         } else if (type.equals(StackFloat.class)) {
-            return new StackFloat(0);
+            return StackFloat.ZERO;
         } else if (type.equals(StackDouble.class)) {
-            return new StackDouble(0);
+            return StackDouble.ZERO;
         } else if (type.equals(StackObject.class)) {
             return StackObject.NULL;
         } else {
