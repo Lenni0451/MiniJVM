@@ -84,7 +84,9 @@ public class ExecutionManager {
 
     @SneakyThrows
     public ExecutorClass loadClass(final ExecutionContext executionContext, final Type type) {
-        if (this.loadedClasses.containsKey(type)) return this.loadedClasses.get(type);
+        ExecutorClass loadedClass = this.loadedClasses.get(type);
+        if (loadedClass != null) return loadedClass;
+
         ClassNode classNode;
         if (type.getSort() >= Type.VOID && type.getSort() <= Type.DOUBLE) {
             classNode = new ClassNode();
@@ -109,7 +111,9 @@ public class ExecutionManager {
     }
 
     public ExecutorObject instantiateClass(final ExecutionContext executionContext, final ExecutorClass executorClass) {
-        if (this.classInstances.containsKey(executorClass)) return this.classInstances.get(executorClass);
+        ExecutorObject instantiatedClass = this.classInstances.get(executorClass);
+        if (instantiatedClass != null) return instantiatedClass;
+
         ExecutorObject classInstance = new ClassObject(this, executionContext, executorClass);
         { //Component type
             ExecutorClass.ResolvedField componentTypeField = classInstance.getClazz().findField("componentType", "Ljava/lang/Class;");
