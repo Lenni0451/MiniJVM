@@ -4,6 +4,8 @@ import net.lenni0451.minijvm.context.ExecutionContext;
 import net.lenni0451.minijvm.exception.ExecutorException;
 import net.lenni0451.minijvm.stack.StackElement;
 
+import java.util.Arrays;
+
 public class ExecutorStack {
 
     private final ExecutionContext executionContext;
@@ -17,6 +19,7 @@ public class ExecutorStack {
 
     public void clear() {
         this.stackPointer = 0;
+        Arrays.fill(this.stack, null);
     }
 
     public StackElement[] getStack() {
