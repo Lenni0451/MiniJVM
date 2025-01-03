@@ -4,46 +4,58 @@ import net.lenni0451.minijvm.context.ExecutionContext;
 import net.lenni0451.minijvm.exception.ExecutorException;
 import net.lenni0451.minijvm.stack.StackElement;
 
-import java.util.Stack;
-
 public class ExecutorStack {
 
     private final ExecutionContext executionContext;
-    private final Stack<StackElement> stack;
+    private final StackElement[] stack;
+    private int stackPointer = 0;
 
-    public ExecutorStack(final ExecutionContext executionContext) {
+    public ExecutorStack(final ExecutionContext executionContext, final int maxSize) {
         this.executionContext = executionContext;
-        this.stack = new Stack<>();
+        this.stack = new StackElement[maxSize];
     }
 
     public void clear() {
-        this.stack.clear();
+        this.stackPointer = 0;
     }
 
     public StackElement[] getStack() {
-        return this.stack.toArray(new StackElement[0]);
+        return this.stack.clone();
     }
 
     public void push(final StackElement element) {
-        for (int i = 0; i < element.size(); i++) {
-            this.stack.push(element);
+        switch (element.size()) {
+            case 1:
+                if (this.stackPointer >= this.stack.length) {
+                    throw new ExecutorException(this.executionContext, "Tried to push an element to the stack but the stack is full");
+                }
+                this.stack[this.stackPointer++] = element;
+                break;
+            case 2:
+                if (this.stackPointer + 1 >= this.stack.length) {
+                    throw new ExecutorException(this.executionContext, "Tried to push an element to the stack but the stack is full");
+                }
+                this.stack[this.stackPointer++] = element;
+                this.stack[this.stackPointer++] = element;
+                break;
+            default:
+                throw new ExecutorException(this.executionContext, "Tried to push an element to the stack with a size of " + element.size() + " but the stack only supports elements with a size of 1 or 2");
         }
     }
 
     public StackElement pop() {
-        if (this.stack.isEmpty()) {
+        if (this.stackPointer == 0) {
             throw new ExecutorException(this.executionContext, "Tried to pop an element from an empty stack");
         }
-        return this.stack.pop();
+        StackElement previous = this.stack[--this.stackPointer];
+        this.stack[this.stackPointer] = null;
+        return previous;
     }
 
     public StackElement popSized() {
         StackElement element = this.pop();
-        for (int i = 1; i < element.size(); i++) {
-            StackElement other = this.stack.pop();
-            if (other != element) {
-                throw new ExecutorException(this.executionContext, "Tried to pop an element from the stack with a size of " + element.size() + " but the stack contains an element of different type");
-            }
+        if (element.size() == 2 && this.pop() != element) {
+            throw new ExecutorException(this.executionContext, "Tried to pop an element from the stack with a size of " + element.size() + " but the stack contains an element of different type");
         }
         return element;
     }
@@ -57,93 +69,93 @@ public class ExecutorStack {
     }
 
     public StackElement peek() {
-        if (this.stack.isEmpty()) {
+        if (this.stackPointer == 0) {
             throw new ExecutorException(this.executionContext, "Tried to peek an element from an empty stack");
         }
-        return this.stack.peek();
+        return this.stack[this.stackPointer - 1];
     }
 
     public void swap() {
-        if (this.stack.size() < 2) {
+        if (this.stackPointer < 2) {
             throw new ExecutorException(this.executionContext, "Tried to swap the top two elements of the stack but the stack size is smaller than 2");
         }
-        StackElement first = this.stack.pop();
-        StackElement second = this.stack.pop();
-        this.stack.push(first);
-        this.stack.push(second);
+        StackElement first = this.pop();
+        StackElement second = this.pop();
+        this.push(first);
+        this.push(second);
     }
 
     public void dup() {
-        if (this.stack.isEmpty()) {
+        if (this.stackPointer == 0) {
             throw new ExecutorException(this.executionContext, "Tried to duplicate the top element of the stack but the stack is empty");
         }
-        this.stack.push(this.stack.peek());
+        this.push(this.peek());
     }
 
     public void dupX1() {
-        if (this.stack.size() < 2) {
+        if (this.stackPointer < 2) {
             throw new ExecutorException(this.executionContext, "Tried to duplicate the top element of the stack and insert it below the second element but the stack size is smaller than 2");
         }
-        StackElement first = this.stack.pop();
-        StackElement second = this.stack.pop();
-        this.stack.push(first);
-        this.stack.push(second);
-        this.stack.push(first);
+        StackElement first = this.pop();
+        StackElement second = this.pop();
+        this.push(first);
+        this.push(second);
+        this.push(first);
     }
 
     public void dupX2() {
-        if (this.stack.size() < 3) {
+        if (this.stackPointer < 3) {
             throw new ExecutorException(this.executionContext, "Tried to duplicate the top element of the stack and insert it below the third element but the stack size is smaller than 3");
         }
-        StackElement first = this.stack.pop();
-        StackElement second = this.stack.pop();
-        StackElement third = this.stack.pop();
-        this.stack.push(first);
-        this.stack.push(third);
-        this.stack.push(second);
-        this.stack.push(first);
+        StackElement first = this.pop();
+        StackElement second = this.pop();
+        StackElement third = this.pop();
+        this.push(first);
+        this.push(third);
+        this.push(second);
+        this.push(first);
     }
 
     public void dup2() {
-        if (this.stack.size() < 2) {
+        if (this.stackPointer < 2) {
             throw new ExecutorException(this.executionContext, "Tried to duplicate the top two elements of the stack but the stack size is smaller than 2");
         }
-        StackElement first = this.stack.pop();
-        StackElement second = this.stack.pop();
-        this.stack.push(second);
-        this.stack.push(first);
-        this.stack.push(second);
-        this.stack.push(first);
+        StackElement first = this.pop();
+        StackElement second = this.pop();
+        this.push(second);
+        this.push(first);
+        this.push(second);
+        this.push(first);
     }
 
     public void dup2X1() {
-        if (this.stack.size() < 3) {
+        if (this.stackPointer < 3) {
             throw new ExecutorException(this.executionContext, "Tried to duplicate the top two elements of the stack and insert them below the third element but the stack size is smaller than 3");
         }
-        StackElement first = this.stack.pop();
-        StackElement second = this.stack.pop();
-        StackElement third = this.stack.pop();
-        this.stack.push(second);
-        this.stack.push(first);
-        this.stack.push(third);
-        this.stack.push(second);
-        this.stack.push(first);
+        StackElement first = this.pop();
+        StackElement second = this.pop();
+        StackElement third = this.pop();
+        this.push(second);
+        this.push(first);
+        this.push(third);
+        this.push(second);
+        this.push(first);
     }
 
     public void dup2X2() {
-        if (this.stack.size() < 4) {
+        if (this.stackPointer < 4) {
             throw new ExecutorException(this.executionContext, "Tried to duplicate the top two elements of the stack and insert them below the fourth element but the stack size is smaller than 4");
         }
-        StackElement first = this.stack.pop();
-        StackElement second = this.stack.pop();
-        StackElement third = this.stack.pop();
-        StackElement fourth = this.stack.pop();
-        this.stack.push(second);
-        this.stack.push(first);
-        this.stack.push(fourth);
-        this.stack.push(third);
-        this.stack.push(second);
-        this.stack.push(first);
+        StackElement first = this.pop();
+        StackElement second = this.pop();
+        StackElement third = this.pop();
+        StackElement fourth = this.pop();
+        this.push(second);
+        this.push(first);
+        this.push(fourth);
+        this.push(third);
+        this.push(second);
+        this.push(first);
     }
 
 }

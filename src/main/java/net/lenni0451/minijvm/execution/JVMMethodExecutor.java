@@ -36,7 +36,7 @@ public class JVMMethodExecutor implements MethodExecutor {
             }
         }
         ExecutionContext.StackFrame stackFrame = executionContext.getCurrentStackFrame();
-        ExecutorStack stack = new ExecutorStack(executionContext);
+        ExecutorStack stack = new ExecutorStack(executionContext, currentMethod.maxStack);
         AbstractInsnNode currentInstruction = currentMethod.instructions.getFirst();
         ExecutionResult result = null;
         while (true) {
