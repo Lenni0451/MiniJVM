@@ -17,7 +17,9 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 
@@ -26,12 +28,12 @@ public class JVMMethodExecutor implements MethodExecutor {
     @Override
     public ExecutionResult execute(ExecutionManager executionManager, ExecutionContext executionContext, ExecutorClass currentClass, MethodNode currentMethod, ExecutorObject instance, StackElement[] arguments) {
         boolean isStatic = Modifiers.has(currentMethod.access, Opcodes.ACC_STATIC);
-        Map<Integer, StackElement> locals = new HashMap<>();
+        StackElement[] locals = new StackElement[currentMethod.maxLocals];
         {
-            if (!isStatic) locals.put(0, new StackObject(instance));
+            if (!isStatic) locals[0] = new StackObject(instance);
             int currentIndex = isStatic ? 0 : 1;
             for (StackElement argument : arguments) {
-                locals.put(currentIndex, argument);
+                locals[currentIndex] = argument;
                 currentIndex += argument.size();
             }
         }
@@ -87,7 +89,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                 case Opcodes.DLOAD:
                 case Opcodes.ALOAD:
                     VarInsnNode varInsnNode = (VarInsnNode) currentInstruction;
-                    StackElement value = locals.get(varInsnNode.var);
+                    StackElement value = locals[varInsnNode.var];
                     verifyType(executionContext, value, getTypeFromOpcode(opcode));
                     stack.push(value);
                     break;
@@ -121,7 +123,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                     varInsnNode = (VarInsnNode) currentInstruction;
                     value = stack.popSized();
                     verifyType(executionContext, value, getTypeFromOpcode(opcode));
-                    locals.put(varInsnNode.var, value);
+                    locals[varInsnNode.var] = value;
                     break;
                 case Opcodes.IASTORE:
                 case Opcodes.LASTORE:
@@ -351,9 +353,9 @@ public class JVMMethodExecutor implements MethodExecutor {
                     break;
                 case Opcodes.IINC:
                     IincInsnNode iincInsnNode = (IincInsnNode) currentInstruction;
-                    StackElement local = locals.get(iincInsnNode.var);
+                    StackElement local = locals[iincInsnNode.var];
                     verifyType(executionContext, local, StackInt.class);
-                    locals.put(iincInsnNode.var, new StackInt(((StackInt) local).value() + iincInsnNode.incr));
+                    locals[iincInsnNode.var] = new StackInt(((StackInt) local).value() + iincInsnNode.incr);
                     break;
                 case Opcodes.I2L:
                     int1 = stack.pop(StackInt.class);
