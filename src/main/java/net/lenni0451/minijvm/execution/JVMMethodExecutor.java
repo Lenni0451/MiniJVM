@@ -44,7 +44,7 @@ public class JVMMethodExecutor implements MethodExecutor {
         ExecutionResult result = null;
         while (true) {
             if (ExecutionManager.DEBUG) {
-                System.out.println("  " + currentInstruction.getClass().getSimpleName() + " -> " + Arrays.stream(stack.getStack()).map(StackElement::toString).collect(Collectors.joining(", ")));
+                System.out.println("  " + currentInstruction.getClass().getSimpleName() + " " + currentInstruction.getOpcode() + " -> " + Arrays.stream(stack.getStack()).map(StackElement::toString).collect(Collectors.joining(", ")));
             }
             int opcode = currentInstruction.getOpcode();
             switch (opcode) {
@@ -857,7 +857,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                 case Opcodes.IFNONNULL:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
                     object = stack.pop(StackObject.class);
-                    if (object != StackObject.NULL) {
+                    if (!object.isNull()) {
                         //Jump
                         currentInstruction = jumpInsnNode.label;
                     }
