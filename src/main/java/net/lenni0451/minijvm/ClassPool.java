@@ -17,21 +17,18 @@ import static net.lenni0451.commons.asm.ASMUtils.slash;
 
 public class ClassPool {
 
-    @Nullable
-    private final ClassPool parent;
     private final ClassProvider classProvider;
     private final Map<String, byte[]> classes;
 
     public ClassPool(final ClassProvider classes) {
-        this(null, classes, new HashMap<>());
+        this(classes, new HashMap<>());
     }
 
     public ClassPool(final Map<String, byte[]> classes) {
-        this(null, new MapClassProvider(classes, MapClassProvider.NameFormat.SLASH), new HashMap<>());
+        this(new MapClassProvider(classes, MapClassProvider.NameFormat.SLASH), new HashMap<>());
     }
 
-    public ClassPool(final @Nullable ClassPool parent, final ClassProvider classProvider, final Map<String, byte[]> classes) {
-        this.parent = parent;
+    public ClassPool(final ClassProvider classProvider, final Map<String, byte[]> classes) {
         this.classProvider = classProvider;
         this.classes = new HashMap<>(classes);
     }
@@ -49,18 +46,14 @@ public class ClassPool {
     }
 
     @Nullable
-    public byte[] getClass(final String internalName) {
+    public byte[] getClass(final String internalName) throws ClassNotFoundException {
         byte[] bytes = this.classes.get(internalName);
         if (bytes != null) return bytes;
-        try {
-            return this.classProvider.getClass(internalName);
-        } catch (ClassNotFoundException e) {
-            return this.parent != null ? this.parent.getClass(internalName) : null;
-        }
+        return this.classProvider.getClass(internalName);
     }
 
     @Nullable
-    public ClassNode getClassNode(final String internalName) {
+    public ClassNode getClassNode(final String internalName) throws ClassNotFoundException {
         byte[] bytes = this.getClass(internalName);
         if (bytes == null) return null;
         ClassNode classNode = ClassIO.fromBytes(bytes);

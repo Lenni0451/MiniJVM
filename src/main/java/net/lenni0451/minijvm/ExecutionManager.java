@@ -86,7 +86,7 @@ public class ExecutionManager {
         }
     }
 
-    @SneakyThrows
+    @SneakyThrows //TODO: Actually handle if classes can't be loaded
     public ExecutorClass loadClass(final ExecutionContext executionContext, final Type type) {
         ExecutorClass loadedClass = this.loadedClasses.get(type);
         if (loadedClass != null) return loadedClass;
