@@ -18,6 +18,7 @@ import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Stack;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ExecutorClass {
@@ -48,15 +49,18 @@ public class ExecutorClass {
 
     @SneakyThrows
     private void initSuperClasses(final ExecutionContext executionContext) {
-        this.superClasses.put(this.classNode.name, this);
-        for (String itf : this.classNode.interfaces) {
-            this.superClasses.put(itf, executionContext.getExecutionManager().loadClass(executionContext, Type.getObjectType(itf)));
-        }
-
-        ExecutorClass superClass = this;
-        while (superClass.classNode.superName != null) {
-            superClass = executionContext.getExecutionManager().loadClass(executionContext, Type.getObjectType(superClass.classNode.superName));
-            this.superClasses.putAll(superClass.superClasses);
+        Stack<ExecutorClass> stack = new Stack<>();
+        stack.push(this);
+        while (!stack.isEmpty()) {
+            ExecutorClass current = stack.pop();
+            if (this.superClasses.containsKey(current.classNode.name)) continue;
+            this.superClasses.put(current.classNode.name, current);
+            for (String itf : current.classNode.interfaces) {
+                stack.push(executionContext.getExecutionManager().loadClass(executionContext, Type.getObjectType(itf)));
+            }
+            if (current.classNode.superName != null) {
+                stack.push(executionContext.getExecutionManager().loadClass(executionContext, Type.getObjectType(current.classNode.superName)));
+            }
         }
     }
 
@@ -90,7 +94,9 @@ public class ExecutorClass {
                 return elementClass.isInstance(executionContext, type.getElementType());
             }
         }
-        return this.superClasses.containsKey(type.getInternalName());
+        String name = type.getInternalName();
+        if (Types.isPrimitive(type)) name = type.getClassName();
+        return this.superClasses.containsKey(name);
     }
 
     @Nullable

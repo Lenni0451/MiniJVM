@@ -51,58 +51,58 @@ public class JVMMethodExecutor implements MethodExecutor {
                 case Opcodes.NOP:
                     break;
                 case Opcodes.ACONST_NULL:
-                    stack.push(StackObject.NULL);
+                    stack.pushSized(StackObject.NULL);
                     break;
                 case Opcodes.ICONST_M1:
-                    stack.push(StackInt.MINUS1);
+                    stack.pushSized(StackInt.MINUS1);
                     break;
                 case Opcodes.ICONST_0:
-                    stack.push(StackInt.ZERO);
+                    stack.pushSized(StackInt.ZERO);
                     break;
                 case Opcodes.ICONST_1:
-                    stack.push(StackInt.ONE);
+                    stack.pushSized(StackInt.ONE);
                     break;
                 case Opcodes.ICONST_2:
-                    stack.push(StackInt.TWO);
+                    stack.pushSized(StackInt.TWO);
                     break;
                 case Opcodes.ICONST_3:
-                    stack.push(StackInt.THREE);
+                    stack.pushSized(StackInt.THREE);
                     break;
                 case Opcodes.ICONST_4:
-                    stack.push(StackInt.FOUR);
+                    stack.pushSized(StackInt.FOUR);
                     break;
                 case Opcodes.ICONST_5:
-                    stack.push(StackInt.FIVE);
+                    stack.pushSized(StackInt.FIVE);
                     break;
                 case Opcodes.LCONST_0:
-                    stack.push(StackLong.ZERO);
+                    stack.pushSized(StackLong.ZERO);
                     break;
                 case Opcodes.LCONST_1:
-                    stack.push(StackLong.ONE);
+                    stack.pushSized(StackLong.ONE);
                     break;
                 case Opcodes.FCONST_0:
-                    stack.push(StackFloat.ZERO);
+                    stack.pushSized(StackFloat.ZERO);
                     break;
                 case Opcodes.FCONST_1:
-                    stack.push(StackFloat.ONE);
+                    stack.pushSized(StackFloat.ONE);
                     break;
                 case Opcodes.FCONST_2:
-                    stack.push(StackFloat.TWO);
+                    stack.pushSized(StackFloat.TWO);
                     break;
                 case Opcodes.DCONST_0:
-                    stack.push(StackDouble.ZERO);
+                    stack.pushSized(StackDouble.ZERO);
                     break;
                 case Opcodes.DCONST_1:
-                    stack.push(StackDouble.ONE);
+                    stack.pushSized(StackDouble.ONE);
                     break;
                 case Opcodes.BIPUSH:
                 case Opcodes.SIPUSH:
                     IntInsnNode intInsnNode1 = (IntInsnNode) currentInstruction;
-                    stack.push(new StackInt(intInsnNode1.operand));
+                    stack.pushSized(new StackInt(intInsnNode1.operand));
                     break;
                 case Opcodes.LDC:
                     LdcInsnNode ldcInsnNode = (LdcInsnNode) currentInstruction;
-                    stack.push(ExecutorTypeUtils.parse(executionContext, ldcInsnNode.cst));
+                    stack.pushSized(ExecutorTypeUtils.parse(executionContext, ldcInsnNode.cst));
                     break;
                 case Opcodes.ILOAD:
                 case Opcodes.LLOAD:
@@ -112,7 +112,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                     VarInsnNode varInsnNode = (VarInsnNode) currentInstruction;
                     StackElement value = locals[varInsnNode.var];
                     verifyType(executionContext, value, getTypeFromOpcode(opcode));
-                    stack.push(value);
+                    stack.pushSized(value);
                     break;
                 case Opcodes.IALOAD:
                 case Opcodes.LALOAD:
@@ -122,8 +122,8 @@ public class JVMMethodExecutor implements MethodExecutor {
                 case Opcodes.BALOAD:
                 case Opcodes.CALOAD:
                 case Opcodes.SALOAD:
-                    StackInt index = stack.pop(StackInt.class);
-                    StackObject array = stack.pop(StackObject.class);
+                    StackInt index = stack.popSized(StackInt.class);
+                    StackObject array = stack.popSized(StackObject.class);
                     StackElement[] arrayElements = ((ArrayObject) array.value()).getElements();
                     //TODO: Type checks
                     if (index.value() < 0 || index.value() >= arrayElements.length) {
@@ -133,7 +133,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                         if (opcode == Opcodes.BALOAD) value = new StackInt((byte) ((StackInt) value).value());
                         else if (opcode == Opcodes.CALOAD) value = new StackInt((char) ((StackInt) value).value());
                         else if (opcode == Opcodes.SALOAD) value = new StackInt((short) ((StackInt) value).value());
-                        stack.push(value);
+                        stack.pushSized(value);
                     }
                     break;
                 case Opcodes.ISTORE:
@@ -155,8 +155,8 @@ public class JVMMethodExecutor implements MethodExecutor {
                 case Opcodes.CASTORE:
                 case Opcodes.SASTORE:
                     value = stack.popSized();
-                    index = stack.pop(StackInt.class);
-                    array = stack.pop(StackObject.class);
+                    index = stack.popSized(StackInt.class);
+                    array = stack.popSized(StackObject.class);
                     //TODO: Type checks
                     arrayElements = ((ArrayObject) array.value()).getElements();
                     if (index.value() < 0 || index.value() >= arrayElements.length) {
@@ -197,180 +197,180 @@ public class JVMMethodExecutor implements MethodExecutor {
                     stack.swap();
                     break;
                 case Opcodes.IADD:
-                    StackInt int1 = stack.pop(StackInt.class);
-                    StackInt int2 = stack.pop(StackInt.class);
-                    stack.push(new StackInt(int2.value() + int1.value()));
+                    StackInt int1 = stack.popSized(StackInt.class);
+                    StackInt int2 = stack.popSized(StackInt.class);
+                    stack.pushSized(new StackInt(int2.value() + int1.value()));
                     break;
                 case Opcodes.LADD:
-                    StackLong long1 = stack.pop(StackLong.class);
-                    StackLong long2 = stack.pop(StackLong.class);
-                    stack.push(new StackLong(long2.value() + long1.value()));
+                    StackLong long1 = stack.popSized(StackLong.class);
+                    StackLong long2 = stack.popSized(StackLong.class);
+                    stack.pushSized(new StackLong(long2.value() + long1.value()));
                     break;
                 case Opcodes.FADD:
-                    StackFloat float1 = stack.pop(StackFloat.class);
-                    StackFloat float2 = stack.pop(StackFloat.class);
-                    stack.push(new StackFloat(float2.value() + float1.value()));
+                    StackFloat float1 = stack.popSized(StackFloat.class);
+                    StackFloat float2 = stack.popSized(StackFloat.class);
+                    stack.pushSized(new StackFloat(float2.value() + float1.value()));
                     break;
                 case Opcodes.DADD:
-                    StackDouble double1 = stack.pop(StackDouble.class);
-                    StackDouble double2 = stack.pop(StackDouble.class);
-                    stack.push(new StackDouble(double2.value() + double1.value()));
+                    StackDouble double1 = stack.popSized(StackDouble.class);
+                    StackDouble double2 = stack.popSized(StackDouble.class);
+                    stack.pushSized(new StackDouble(double2.value() + double1.value()));
                     break;
                 case Opcodes.ISUB:
-                    int1 = stack.pop(StackInt.class);
-                    int2 = stack.pop(StackInt.class);
-                    stack.push(new StackInt(int2.value() - int1.value()));
+                    int1 = stack.popSized(StackInt.class);
+                    int2 = stack.popSized(StackInt.class);
+                    stack.pushSized(new StackInt(int2.value() - int1.value()));
                     break;
                 case Opcodes.LSUB:
-                    long1 = stack.pop(StackLong.class);
-                    long2 = stack.pop(StackLong.class);
-                    stack.push(new StackLong(long2.value() - long1.value()));
+                    long1 = stack.popSized(StackLong.class);
+                    long2 = stack.popSized(StackLong.class);
+                    stack.pushSized(new StackLong(long2.value() - long1.value()));
                     break;
                 case Opcodes.FSUB:
-                    float1 = stack.pop(StackFloat.class);
-                    float2 = stack.pop(StackFloat.class);
-                    stack.push(new StackFloat(float2.value() - float1.value()));
+                    float1 = stack.popSized(StackFloat.class);
+                    float2 = stack.popSized(StackFloat.class);
+                    stack.pushSized(new StackFloat(float2.value() - float1.value()));
                     break;
                 case Opcodes.DSUB:
-                    double1 = stack.pop(StackDouble.class);
-                    double2 = stack.pop(StackDouble.class);
-                    stack.push(new StackDouble(double2.value() - double1.value()));
+                    double1 = stack.popSized(StackDouble.class);
+                    double2 = stack.popSized(StackDouble.class);
+                    stack.pushSized(new StackDouble(double2.value() - double1.value()));
                     break;
                 case Opcodes.IMUL:
-                    int1 = stack.pop(StackInt.class);
-                    int2 = stack.pop(StackInt.class);
-                    stack.push(new StackInt(int2.value() * int1.value()));
+                    int1 = stack.popSized(StackInt.class);
+                    int2 = stack.popSized(StackInt.class);
+                    stack.pushSized(new StackInt(int2.value() * int1.value()));
                     break;
                 case Opcodes.LMUL:
-                    long1 = stack.pop(StackLong.class);
-                    long2 = stack.pop(StackLong.class);
-                    stack.push(new StackLong(long2.value() * long1.value()));
+                    long1 = stack.popSized(StackLong.class);
+                    long2 = stack.popSized(StackLong.class);
+                    stack.pushSized(new StackLong(long2.value() * long1.value()));
                     break;
                 case Opcodes.FMUL:
-                    float1 = stack.pop(StackFloat.class);
-                    float2 = stack.pop(StackFloat.class);
-                    stack.push(new StackFloat(float2.value() * float1.value()));
+                    float1 = stack.popSized(StackFloat.class);
+                    float2 = stack.popSized(StackFloat.class);
+                    stack.pushSized(new StackFloat(float2.value() * float1.value()));
                     break;
                 case Opcodes.DMUL:
-                    double1 = stack.pop(StackDouble.class);
-                    double2 = stack.pop(StackDouble.class);
-                    stack.push(new StackDouble(double2.value() * double1.value()));
+                    double1 = stack.popSized(StackDouble.class);
+                    double2 = stack.popSized(StackDouble.class);
+                    stack.pushSized(new StackDouble(double2.value() * double1.value()));
                     break;
                 case Opcodes.IDIV:
-                    int1 = stack.pop(StackInt.class);
-                    int2 = stack.pop(StackInt.class);
-                    stack.push(new StackInt(int2.value() / int1.value()));
+                    int1 = stack.popSized(StackInt.class);
+                    int2 = stack.popSized(StackInt.class);
+                    stack.pushSized(new StackInt(int2.value() / int1.value()));
                     break;
                 case Opcodes.LDIV:
-                    long1 = stack.pop(StackLong.class);
-                    long2 = stack.pop(StackLong.class);
-                    stack.push(new StackLong(long2.value() / long1.value()));
+                    long1 = stack.popSized(StackLong.class);
+                    long2 = stack.popSized(StackLong.class);
+                    stack.pushSized(new StackLong(long2.value() / long1.value()));
                     break;
                 case Opcodes.FDIV:
-                    float1 = stack.pop(StackFloat.class);
-                    float2 = stack.pop(StackFloat.class);
-                    stack.push(new StackFloat(float2.value() / float1.value()));
+                    float1 = stack.popSized(StackFloat.class);
+                    float2 = stack.popSized(StackFloat.class);
+                    stack.pushSized(new StackFloat(float2.value() / float1.value()));
                     break;
                 case Opcodes.DDIV:
-                    double1 = stack.pop(StackDouble.class);
-                    double2 = stack.pop(StackDouble.class);
-                    stack.push(new StackDouble(double2.value() / double1.value()));
+                    double1 = stack.popSized(StackDouble.class);
+                    double2 = stack.popSized(StackDouble.class);
+                    stack.pushSized(new StackDouble(double2.value() / double1.value()));
                     break;
                 case Opcodes.IREM:
-                    int1 = stack.pop(StackInt.class);
-                    int2 = stack.pop(StackInt.class);
-                    stack.push(new StackInt(int2.value() % int1.value()));
+                    int1 = stack.popSized(StackInt.class);
+                    int2 = stack.popSized(StackInt.class);
+                    stack.pushSized(new StackInt(int2.value() % int1.value()));
                     break;
                 case Opcodes.LREM:
-                    long1 = stack.pop(StackLong.class);
-                    long2 = stack.pop(StackLong.class);
-                    stack.push(new StackLong(long2.value() % long1.value()));
+                    long1 = stack.popSized(StackLong.class);
+                    long2 = stack.popSized(StackLong.class);
+                    stack.pushSized(new StackLong(long2.value() % long1.value()));
                     break;
                 case Opcodes.FREM:
-                    float1 = stack.pop(StackFloat.class);
-                    float2 = stack.pop(StackFloat.class);
-                    stack.push(new StackFloat(float2.value() % float1.value()));
+                    float1 = stack.popSized(StackFloat.class);
+                    float2 = stack.popSized(StackFloat.class);
+                    stack.pushSized(new StackFloat(float2.value() % float1.value()));
                     break;
                 case Opcodes.DREM:
-                    double1 = stack.pop(StackDouble.class);
-                    double2 = stack.pop(StackDouble.class);
-                    stack.push(new StackDouble(double2.value() % double1.value()));
+                    double1 = stack.popSized(StackDouble.class);
+                    double2 = stack.popSized(StackDouble.class);
+                    stack.pushSized(new StackDouble(double2.value() % double1.value()));
                     break;
                 case Opcodes.INEG:
-                    int1 = stack.pop(StackInt.class);
-                    stack.push(new StackInt(-int1.value()));
+                    int1 = stack.popSized(StackInt.class);
+                    stack.pushSized(new StackInt(-int1.value()));
                     break;
                 case Opcodes.LNEG:
-                    long1 = stack.pop(StackLong.class);
-                    stack.push(new StackLong(-long1.value()));
+                    long1 = stack.popSized(StackLong.class);
+                    stack.pushSized(new StackLong(-long1.value()));
                     break;
                 case Opcodes.FNEG:
-                    float1 = stack.pop(StackFloat.class);
-                    stack.push(new StackFloat(-float1.value()));
+                    float1 = stack.popSized(StackFloat.class);
+                    stack.pushSized(new StackFloat(-float1.value()));
                     break;
                 case Opcodes.DNEG:
-                    double1 = stack.pop(StackDouble.class);
-                    stack.push(new StackDouble(-double1.value()));
+                    double1 = stack.popSized(StackDouble.class);
+                    stack.pushSized(new StackDouble(-double1.value()));
                     break;
                 case Opcodes.ISHL:
-                    int1 = stack.pop(StackInt.class);
-                    int2 = stack.pop(StackInt.class);
-                    stack.push(new StackInt(int2.value() << int1.value()));
+                    int1 = stack.popSized(StackInt.class);
+                    int2 = stack.popSized(StackInt.class);
+                    stack.pushSized(new StackInt(int2.value() << int1.value()));
                     break;
                 case Opcodes.LSHL:
-                    int1 = stack.pop(StackInt.class);
-                    long1 = stack.pop(StackLong.class);
-                    stack.push(new StackLong(long1.value() << int1.value()));
+                    int1 = stack.popSized(StackInt.class);
+                    long1 = stack.popSized(StackLong.class);
+                    stack.pushSized(new StackLong(long1.value() << int1.value()));
                     break;
                 case Opcodes.ISHR:
-                    int1 = stack.pop(StackInt.class);
-                    int2 = stack.pop(StackInt.class);
-                    stack.push(new StackInt(int2.value() >> int1.value()));
+                    int1 = stack.popSized(StackInt.class);
+                    int2 = stack.popSized(StackInt.class);
+                    stack.pushSized(new StackInt(int2.value() >> int1.value()));
                     break;
                 case Opcodes.LSHR:
-                    int1 = stack.pop(StackInt.class);
-                    long1 = stack.pop(StackLong.class);
-                    stack.push(new StackLong(long1.value() >> int1.value()));
+                    int1 = stack.popSized(StackInt.class);
+                    long1 = stack.popSized(StackLong.class);
+                    stack.pushSized(new StackLong(long1.value() >> int1.value()));
                     break;
                 case Opcodes.IUSHR:
-                    int1 = stack.pop(StackInt.class);
-                    int2 = stack.pop(StackInt.class);
-                    stack.push(new StackInt(int2.value() >>> int1.value()));
+                    int1 = stack.popSized(StackInt.class);
+                    int2 = stack.popSized(StackInt.class);
+                    stack.pushSized(new StackInt(int2.value() >>> int1.value()));
                     break;
                 case Opcodes.LUSHR:
-                    int1 = stack.pop(StackInt.class);
-                    long1 = stack.pop(StackLong.class);
-                    stack.push(new StackLong(long1.value() >>> int1.value()));
+                    int1 = stack.popSized(StackInt.class);
+                    long1 = stack.popSized(StackLong.class);
+                    stack.pushSized(new StackLong(long1.value() >>> int1.value()));
                     break;
                 case Opcodes.IAND:
-                    int1 = stack.pop(StackInt.class);
-                    int2 = stack.pop(StackInt.class);
-                    stack.push(new StackInt(int2.value() & int1.value()));
+                    int1 = stack.popSized(StackInt.class);
+                    int2 = stack.popSized(StackInt.class);
+                    stack.pushSized(new StackInt(int2.value() & int1.value()));
                     break;
                 case Opcodes.LAND:
-                    long1 = stack.pop(StackLong.class);
-                    long2 = stack.pop(StackLong.class);
-                    stack.push(new StackLong(long2.value() & long1.value()));
+                    long1 = stack.popSized(StackLong.class);
+                    long2 = stack.popSized(StackLong.class);
+                    stack.pushSized(new StackLong(long2.value() & long1.value()));
                     break;
                 case Opcodes.IOR:
-                    int1 = stack.pop(StackInt.class);
-                    int2 = stack.pop(StackInt.class);
-                    stack.push(new StackInt(int2.value() | int1.value()));
+                    int1 = stack.popSized(StackInt.class);
+                    int2 = stack.popSized(StackInt.class);
+                    stack.pushSized(new StackInt(int2.value() | int1.value()));
                     break;
                 case Opcodes.LOR:
-                    long1 = stack.pop(StackLong.class);
-                    long2 = stack.pop(StackLong.class);
-                    stack.push(new StackLong(long2.value() | long1.value()));
+                    long1 = stack.popSized(StackLong.class);
+                    long2 = stack.popSized(StackLong.class);
+                    stack.pushSized(new StackLong(long2.value() | long1.value()));
                     break;
                 case Opcodes.IXOR:
-                    int1 = stack.pop(StackInt.class);
-                    int2 = stack.pop(StackInt.class);
-                    stack.push(new StackInt(int2.value() ^ int1.value()));
+                    int1 = stack.popSized(StackInt.class);
+                    int2 = stack.popSized(StackInt.class);
+                    stack.pushSized(new StackInt(int2.value() ^ int1.value()));
                     break;
                 case Opcodes.LXOR:
-                    long1 = stack.pop(StackLong.class);
-                    long2 = stack.pop(StackLong.class);
-                    stack.push(new StackLong(long2.value() ^ long1.value()));
+                    long1 = stack.popSized(StackLong.class);
+                    long2 = stack.popSized(StackLong.class);
+                    stack.pushSized(new StackLong(long2.value() ^ long1.value()));
                     break;
                 case Opcodes.IINC:
                     IincInsnNode iincInsnNode = (IincInsnNode) currentInstruction;
@@ -379,97 +379,97 @@ public class JVMMethodExecutor implements MethodExecutor {
                     locals[iincInsnNode.var] = new StackInt(((StackInt) local).value() + iincInsnNode.incr);
                     break;
                 case Opcodes.I2L:
-                    int1 = stack.pop(StackInt.class);
-                    stack.push(new StackLong(int1.value()));
+                    int1 = stack.popSized(StackInt.class);
+                    stack.pushSized(new StackLong(int1.value()));
                     break;
                 case Opcodes.I2F:
-                    int1 = stack.pop(StackInt.class);
-                    stack.push(new StackFloat(int1.value()));
+                    int1 = stack.popSized(StackInt.class);
+                    stack.pushSized(new StackFloat(int1.value()));
                     break;
                 case Opcodes.I2D:
-                    int1 = stack.pop(StackInt.class);
-                    stack.push(new StackDouble(int1.value()));
+                    int1 = stack.popSized(StackInt.class);
+                    stack.pushSized(new StackDouble(int1.value()));
                     break;
                 case Opcodes.L2I:
-                    long1 = stack.pop(StackLong.class);
-                    stack.push(new StackInt((int) long1.value()));
+                    long1 = stack.popSized(StackLong.class);
+                    stack.pushSized(new StackInt((int) long1.value()));
                     break;
                 case Opcodes.L2F:
-                    long1 = stack.pop(StackLong.class);
-                    stack.push(new StackFloat(long1.value()));
+                    long1 = stack.popSized(StackLong.class);
+                    stack.pushSized(new StackFloat(long1.value()));
                     break;
                 case Opcodes.L2D:
-                    long1 = stack.pop(StackLong.class);
-                    stack.push(new StackDouble(long1.value()));
+                    long1 = stack.popSized(StackLong.class);
+                    stack.pushSized(new StackDouble(long1.value()));
                     break;
                 case Opcodes.F2I:
-                    float1 = stack.pop(StackFloat.class);
-                    stack.push(new StackInt((int) float1.value()));
+                    float1 = stack.popSized(StackFloat.class);
+                    stack.pushSized(new StackInt((int) float1.value()));
                     break;
                 case Opcodes.F2L:
-                    float1 = stack.pop(StackFloat.class);
-                    stack.push(new StackLong((long) float1.value()));
+                    float1 = stack.popSized(StackFloat.class);
+                    stack.pushSized(new StackLong((long) float1.value()));
                     break;
                 case Opcodes.F2D:
-                    float1 = stack.pop(StackFloat.class);
-                    stack.push(new StackDouble(float1.value()));
+                    float1 = stack.popSized(StackFloat.class);
+                    stack.pushSized(new StackDouble(float1.value()));
                     break;
                 case Opcodes.D2I:
-                    double1 = stack.pop(StackDouble.class);
-                    stack.push(new StackInt((int) double1.value()));
+                    double1 = stack.popSized(StackDouble.class);
+                    stack.pushSized(new StackInt((int) double1.value()));
                     break;
                 case Opcodes.D2L:
-                    double1 = stack.pop(StackDouble.class);
-                    stack.push(new StackLong((long) double1.value()));
+                    double1 = stack.popSized(StackDouble.class);
+                    stack.pushSized(new StackLong((long) double1.value()));
                     break;
                 case Opcodes.D2F:
-                    double1 = stack.pop(StackDouble.class);
-                    stack.push(new StackFloat((float) double1.value()));
+                    double1 = stack.popSized(StackDouble.class);
+                    stack.pushSized(new StackFloat((float) double1.value()));
                     break;
                 case Opcodes.I2B:
-                    int1 = stack.pop(StackInt.class);
-                    stack.push(new StackInt((byte) int1.value()));
+                    int1 = stack.popSized(StackInt.class);
+                    stack.pushSized(new StackInt((byte) int1.value()));
                     break;
                 case Opcodes.I2C:
-                    int1 = stack.pop(StackInt.class);
-                    stack.push(new StackInt((char) int1.value()));
+                    int1 = stack.popSized(StackInt.class);
+                    stack.pushSized(new StackInt((char) int1.value()));
                     break;
                 case Opcodes.I2S:
-                    int1 = stack.pop(StackInt.class);
-                    stack.push(new StackInt((short) int1.value()));
+                    int1 = stack.popSized(StackInt.class);
+                    stack.pushSized(new StackInt((short) int1.value()));
                     break;
                 case Opcodes.LCMP:
-                    long1 = stack.pop(StackLong.class);
-                    long2 = stack.pop(StackLong.class);
-                    stack.push(new StackInt(Long.compare(long2.value(), long1.value())));
+                    long1 = stack.popSized(StackLong.class);
+                    long2 = stack.popSized(StackLong.class);
+                    stack.pushSized(new StackInt(Long.compare(long2.value(), long1.value())));
                     break;
                 case Opcodes.FCMPL:
-                    float1 = stack.pop(StackFloat.class);
-                    float2 = stack.pop(StackFloat.class);
-                    if (Float.isNaN(float1.value()) || Float.isNaN(float2.value())) stack.push(StackInt.MINUS1);
-                    stack.push(new StackInt(Float.compare(float2.value(), float1.value())));
+                    float1 = stack.popSized(StackFloat.class);
+                    float2 = stack.popSized(StackFloat.class);
+                    if (Float.isNaN(float1.value()) || Float.isNaN(float2.value())) stack.pushSized(StackInt.MINUS1);
+                    stack.pushSized(new StackInt(Float.compare(float2.value(), float1.value())));
                     break;
                 case Opcodes.FCMPG:
-                    float1 = stack.pop(StackFloat.class);
-                    float2 = stack.pop(StackFloat.class);
-                    if (Float.isNaN(float1.value()) || Float.isNaN(float2.value())) stack.push(StackInt.ONE);
-                    stack.push(new StackInt(Float.compare(float2.value(), float1.value())));
+                    float1 = stack.popSized(StackFloat.class);
+                    float2 = stack.popSized(StackFloat.class);
+                    if (Float.isNaN(float1.value()) || Float.isNaN(float2.value())) stack.pushSized(StackInt.ONE);
+                    stack.pushSized(new StackInt(Float.compare(float2.value(), float1.value())));
                     break;
                 case Opcodes.DCMPL:
-                    double1 = stack.pop(StackDouble.class);
-                    double2 = stack.pop(StackDouble.class);
-                    if (Double.isNaN(double1.value()) || Double.isNaN(double2.value())) stack.push(StackInt.MINUS1);
-                    stack.push(new StackInt(Double.compare(double2.value(), double1.value())));
+                    double1 = stack.popSized(StackDouble.class);
+                    double2 = stack.popSized(StackDouble.class);
+                    if (Double.isNaN(double1.value()) || Double.isNaN(double2.value())) stack.pushSized(StackInt.MINUS1);
+                    stack.pushSized(new StackInt(Double.compare(double2.value(), double1.value())));
                     break;
                 case Opcodes.DCMPG:
-                    double1 = stack.pop(StackDouble.class);
-                    double2 = stack.pop(StackDouble.class);
-                    if (Double.isNaN(double1.value()) || Double.isNaN(double2.value())) stack.push(StackInt.ONE);
-                    stack.push(new StackInt(Double.compare(double2.value(), double1.value())));
+                    double1 = stack.popSized(StackDouble.class);
+                    double2 = stack.popSized(StackDouble.class);
+                    if (Double.isNaN(double1.value()) || Double.isNaN(double2.value())) stack.pushSized(StackInt.ONE);
+                    stack.pushSized(new StackInt(Double.compare(double2.value(), double1.value())));
                     break;
                 case Opcodes.IFEQ:
                     JumpInsnNode jumpInsnNode = (JumpInsnNode) currentInstruction;
-                    int1 = stack.pop(StackInt.class);
+                    int1 = stack.popSized(StackInt.class);
                     if (int1.value() == 0) {
                         //Jump
                         currentInstruction = jumpInsnNode.label;
@@ -477,7 +477,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                     break;
                 case Opcodes.IFNE:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
-                    int1 = stack.pop(StackInt.class);
+                    int1 = stack.popSized(StackInt.class);
                     if (int1.value() != 0) {
                         //Jump
                         currentInstruction = jumpInsnNode.label;
@@ -485,7 +485,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                     break;
                 case Opcodes.IFLT:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
-                    int1 = stack.pop(StackInt.class);
+                    int1 = stack.popSized(StackInt.class);
                     if (int1.value() < 0) {
                         //Jump
                         currentInstruction = jumpInsnNode.label;
@@ -493,7 +493,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                     break;
                 case Opcodes.IFGE:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
-                    int1 = stack.pop(StackInt.class);
+                    int1 = stack.popSized(StackInt.class);
                     if (int1.value() >= 0) {
                         //Jump
                         currentInstruction = jumpInsnNode.label;
@@ -501,7 +501,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                     break;
                 case Opcodes.IFGT:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
-                    int1 = stack.pop(StackInt.class);
+                    int1 = stack.popSized(StackInt.class);
                     if (int1.value() > 0) {
                         //Jump
                         currentInstruction = jumpInsnNode.label;
@@ -509,7 +509,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                     break;
                 case Opcodes.IFLE:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
-                    int1 = stack.pop(StackInt.class);
+                    int1 = stack.popSized(StackInt.class);
                     if (int1.value() <= 0) {
                         //Jump
                         currentInstruction = jumpInsnNode.label;
@@ -517,8 +517,8 @@ public class JVMMethodExecutor implements MethodExecutor {
                     break;
                 case Opcodes.IF_ICMPEQ:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
-                    int1 = stack.pop(StackInt.class);
-                    int2 = stack.pop(StackInt.class);
+                    int1 = stack.popSized(StackInt.class);
+                    int2 = stack.popSized(StackInt.class);
                     if (int1.value() == int2.value()) {
                         //Jump
                         currentInstruction = jumpInsnNode.label;
@@ -526,8 +526,8 @@ public class JVMMethodExecutor implements MethodExecutor {
                     break;
                 case Opcodes.IF_ICMPNE:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
-                    int1 = stack.pop(StackInt.class);
-                    int2 = stack.pop(StackInt.class);
+                    int1 = stack.popSized(StackInt.class);
+                    int2 = stack.popSized(StackInt.class);
                     if (int1.value() != int2.value()) {
                         //Jump
                         currentInstruction = jumpInsnNode.label;
@@ -535,8 +535,8 @@ public class JVMMethodExecutor implements MethodExecutor {
                     break;
                 case Opcodes.IF_ICMPLT:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
-                    int1 = stack.pop(StackInt.class);
-                    int2 = stack.pop(StackInt.class);
+                    int1 = stack.popSized(StackInt.class);
+                    int2 = stack.popSized(StackInt.class);
                     if (int2.value() < int1.value()) {
                         //Jump
                         currentInstruction = jumpInsnNode.label;
@@ -544,8 +544,8 @@ public class JVMMethodExecutor implements MethodExecutor {
                     break;
                 case Opcodes.IF_ICMPGE:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
-                    int1 = stack.pop(StackInt.class);
-                    int2 = stack.pop(StackInt.class);
+                    int1 = stack.popSized(StackInt.class);
+                    int2 = stack.popSized(StackInt.class);
                     if (int2.value() >= int1.value()) {
                         //Jump
                         currentInstruction = jumpInsnNode.label;
@@ -553,8 +553,8 @@ public class JVMMethodExecutor implements MethodExecutor {
                     break;
                 case Opcodes.IF_ICMPGT:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
-                    int1 = stack.pop(StackInt.class);
-                    int2 = stack.pop(StackInt.class);
+                    int1 = stack.popSized(StackInt.class);
+                    int2 = stack.popSized(StackInt.class);
                     if (int2.value() > int1.value()) {
                         //Jump
                         currentInstruction = jumpInsnNode.label;
@@ -562,8 +562,8 @@ public class JVMMethodExecutor implements MethodExecutor {
                     break;
                 case Opcodes.IF_ICMPLE:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
-                    int1 = stack.pop(StackInt.class);
-                    int2 = stack.pop(StackInt.class);
+                    int1 = stack.popSized(StackInt.class);
+                    int2 = stack.popSized(StackInt.class);
                     if (int2.value() <= int1.value()) {
                         //Jump
                         currentInstruction = jumpInsnNode.label;
@@ -571,8 +571,8 @@ public class JVMMethodExecutor implements MethodExecutor {
                     break;
                 case Opcodes.IF_ACMPEQ:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
-                    StackObject object1 = stack.pop(StackObject.class);
-                    StackObject object2 = stack.pop(StackObject.class);
+                    StackObject object1 = stack.popSized(StackObject.class);
+                    StackObject object2 = stack.popSized(StackObject.class);
                     if (object1.value() == object2.value()) {
                         //Jump
                         currentInstruction = jumpInsnNode.label;
@@ -580,8 +580,8 @@ public class JVMMethodExecutor implements MethodExecutor {
                     break;
                 case Opcodes.IF_ACMPNE:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
-                    object1 = stack.pop(StackObject.class);
-                    object2 = stack.pop(StackObject.class);
+                    object1 = stack.popSized(StackObject.class);
+                    object2 = stack.popSized(StackObject.class);
                     if (object1.value() != object2.value()) {
                         //Jump
                         currentInstruction = jumpInsnNode.label;
@@ -597,7 +597,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                     throw new UnsupportedOperationException(currentInstruction.getClass().getSimpleName() + " " + opcode); //TODO
                 case Opcodes.TABLESWITCH:
                     TableSwitchInsnNode tableSwitchInsnNode = (TableSwitchInsnNode) currentInstruction;
-                    int1 = stack.pop(StackInt.class);
+                    int1 = stack.popSized(StackInt.class);
                     if (int1.value() >= tableSwitchInsnNode.min && int1.value() <= tableSwitchInsnNode.max) {
                         currentInstruction = tableSwitchInsnNode.labels.get(int1.value() - tableSwitchInsnNode.min);
                     } else {
@@ -606,7 +606,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                     break; //Jump
                 case Opcodes.LOOKUPSWITCH:
                     LookupSwitchInsnNode lookupSwitchInsnNode = (LookupSwitchInsnNode) currentInstruction;
-                    int1 = stack.pop(StackInt.class);
+                    int1 = stack.popSized(StackInt.class);
                     int caseIndex = lookupSwitchInsnNode.keys.indexOf(int1.value());
                     if (caseIndex != -1) {
                         currentInstruction = lookupSwitchInsnNode.labels.get(caseIndex);
@@ -615,19 +615,19 @@ public class JVMMethodExecutor implements MethodExecutor {
                     }
                     break; //Jump
                 case Opcodes.IRETURN:
-                    result = ExecutionResult.returnValue(stack.pop(StackInt.class));
+                    result = ExecutionResult.returnValue(stack.popSized(StackInt.class));
                     break;
                 case Opcodes.LRETURN:
-                    result = ExecutionResult.returnValue(stack.pop(StackLong.class));
+                    result = ExecutionResult.returnValue(stack.popSized(StackLong.class));
                     break;
                 case Opcodes.FRETURN:
-                    result = ExecutionResult.returnValue(stack.pop(StackFloat.class));
+                    result = ExecutionResult.returnValue(stack.popSized(StackFloat.class));
                     break;
                 case Opcodes.DRETURN:
-                    result = ExecutionResult.returnValue(stack.pop(StackDouble.class));
+                    result = ExecutionResult.returnValue(stack.popSized(StackDouble.class));
                     break;
                 case Opcodes.ARETURN:
-                    result = ExecutionResult.returnValue(stack.pop(StackObject.class));
+                    result = ExecutionResult.returnValue(stack.popSized(StackObject.class));
                     break;
                 case Opcodes.RETURN:
                     result = ExecutionResult.voidResult();
@@ -641,7 +641,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                         result = ExceptionUtils.newException(executionContext, Types.NO_SUCH_FIELD_ERROR, fieldInsnNode.name);
                     } else {
                         if (opcode == Opcodes.GETSTATIC) {
-                            stack.push(fieldNode.get());
+                            stack.pushSized(fieldNode.get());
                         } else {
                             value = stack.popSized();
                             verifyType(executionContext, value, ExecutorTypeUtils.typeToStackType(Type.getType(fieldNode.field().desc)));
@@ -651,7 +651,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                     break;
                 case Opcodes.GETFIELD:
                     fieldInsnNode = (FieldInsnNode) currentInstruction;
-                    StackObject object = stack.pop(StackObject.class);
+                    StackObject object = stack.popSized(StackObject.class);
                     if (object.isNull()) {
                         result = ExceptionUtils.newException(executionContext, Types.NULL_POINTER_EXCEPTION, "Tried to access field of null object");
                     } else {
@@ -659,14 +659,14 @@ public class JVMMethodExecutor implements MethodExecutor {
                         if (fieldNode == null) {
                             result = ExceptionUtils.newException(executionContext, Types.NO_SUCH_FIELD_ERROR, fieldInsnNode.name);
                         } else {
-                            stack.push(object.value().getField(fieldNode.field()));
+                            stack.pushSized(object.value().getField(fieldNode.field()));
                         }
                     }
                     break;
                 case Opcodes.PUTFIELD:
                     fieldInsnNode = (FieldInsnNode) currentInstruction;
                     value = stack.popSized();
-                    object = stack.pop(StackObject.class);
+                    object = stack.popSized(StackObject.class);
                     if (object.isNull()) {
                         result = ExceptionUtils.newException(executionContext, Types.NULL_POINTER_EXCEPTION, "Tried to access field of null object");
                     } else {
@@ -690,7 +690,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                         verifyType(executionContext, argumentType, ExecutorTypeUtils.typeToStackType(argumentTypes[i]));
                         stackElements.add(0, argumentType);
                     }
-                    StackObject ownerElement = stack.pop(StackObject.class);
+                    StackObject ownerElement = stack.popSized(StackObject.class);
                     if (ownerElement.isNull()) {
                         result = ExceptionUtils.newException(executionContext, Types.NULL_POINTER_EXCEPTION, "Tried to invoke method on null object");
                     } else {
@@ -714,7 +714,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                             ExecutionResult invokeResult = Executor.execute(executionContext, methodNode.owner(), methodNode.method(), ownerObject, stackElements.toArray(new StackElement[0]));
                             if (invokeResult.hasReturnValue()) {
                                 verifyType(executionContext, invokeResult.getReturnValue(), ExecutorTypeUtils.typeToStackType(Types.returnType(methodNode.method())));
-                                stack.push(invokeResult.getReturnValue());
+                                stack.pushSized(invokeResult.getReturnValue());
                             } else if (invokeResult.hasException()) {
                                 result = invokeResult;
                             }
@@ -743,7 +743,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                         ExecutionResult invokeResult = Executor.execute(executionContext, methodNode.owner(), methodNode.method(), null, stackElements.toArray(new StackElement[0]));
                         if (invokeResult.hasReturnValue()) {
                             verifyType(executionContext, invokeResult.getReturnValue(), ExecutorTypeUtils.typeToStackType(Types.returnType(methodNode.method())));
-                            stack.push(invokeResult.getReturnValue());
+                            stack.pushSized(invokeResult.getReturnValue());
                         } else if (invokeResult.hasException()) {
                             result = invokeResult;
                         }
@@ -755,38 +755,38 @@ public class JVMMethodExecutor implements MethodExecutor {
                     TypeInsnNode typeInsnNode = (TypeInsnNode) currentInstruction;
                     ExecutorClass newClass = executionManager.loadClass(executionContext, Type.getObjectType(typeInsnNode.desc));
                     ExecutorObject newObject = executionManager.instantiate(executionContext, newClass);
-                    stack.push(new StackObject(newObject));
+                    stack.pushSized(new StackObject(newObject));
                     break;
                 case Opcodes.NEWARRAY:
                     IntInsnNode intInsnNode = (IntInsnNode) currentInstruction;
-                    int length = stack.pop(StackInt.class).value();
+                    int length = stack.popSized(StackInt.class).value();
                     switch (intInsnNode.operand) {
-                        case Opcodes.T_BOOLEAN -> stack.push(ExecutorTypeUtils.newArray(executionContext, Type.getType(boolean[].class), length, () -> StackInt.ZERO));
-                        case Opcodes.T_BYTE -> stack.push(ExecutorTypeUtils.newArray(executionContext, Type.getType(byte[].class), length, () -> StackInt.ZERO));
-                        case Opcodes.T_CHAR -> stack.push(ExecutorTypeUtils.newArray(executionContext, Type.getType(char[].class), length, () -> StackInt.ZERO));
-                        case Opcodes.T_SHORT -> stack.push(ExecutorTypeUtils.newArray(executionContext, Type.getType(short[].class), length, () -> StackInt.ZERO));
-                        case Opcodes.T_INT -> stack.push(ExecutorTypeUtils.newArray(executionContext, Type.getType(int[].class), length, () -> StackInt.ZERO));
-                        case Opcodes.T_LONG -> stack.push(ExecutorTypeUtils.newArray(executionContext, Type.getType(long[].class), length, () -> StackLong.ZERO));
-                        case Opcodes.T_FLOAT -> stack.push(ExecutorTypeUtils.newArray(executionContext, Type.getType(float[].class), length, () -> StackFloat.ZERO));
-                        case Opcodes.T_DOUBLE -> stack.push(ExecutorTypeUtils.newArray(executionContext, Type.getType(double[].class), length, () -> StackDouble.ZERO));
+                        case Opcodes.T_BOOLEAN -> stack.pushSized(ExecutorTypeUtils.newArray(executionContext, Type.getType(boolean[].class), length, () -> StackInt.ZERO));
+                        case Opcodes.T_BYTE -> stack.pushSized(ExecutorTypeUtils.newArray(executionContext, Type.getType(byte[].class), length, () -> StackInt.ZERO));
+                        case Opcodes.T_CHAR -> stack.pushSized(ExecutorTypeUtils.newArray(executionContext, Type.getType(char[].class), length, () -> StackInt.ZERO));
+                        case Opcodes.T_SHORT -> stack.pushSized(ExecutorTypeUtils.newArray(executionContext, Type.getType(short[].class), length, () -> StackInt.ZERO));
+                        case Opcodes.T_INT -> stack.pushSized(ExecutorTypeUtils.newArray(executionContext, Type.getType(int[].class), length, () -> StackInt.ZERO));
+                        case Opcodes.T_LONG -> stack.pushSized(ExecutorTypeUtils.newArray(executionContext, Type.getType(long[].class), length, () -> StackLong.ZERO));
+                        case Opcodes.T_FLOAT -> stack.pushSized(ExecutorTypeUtils.newArray(executionContext, Type.getType(float[].class), length, () -> StackFloat.ZERO));
+                        case Opcodes.T_DOUBLE -> stack.pushSized(ExecutorTypeUtils.newArray(executionContext, Type.getType(double[].class), length, () -> StackDouble.ZERO));
                         default -> throw new ExecutorException(executionContext, "Unknown array type: " + intInsnNode.operand);
                     }
                     break;
                 case Opcodes.ANEWARRAY:
                     typeInsnNode = (TypeInsnNode) currentInstruction;
-                    length = stack.pop(StackInt.class).value();
+                    length = stack.popSized(StackInt.class).value();
                     newClass = executionManager.loadClass(executionContext, Types.asArray(Type.getObjectType(typeInsnNode.desc), 1));
-                    stack.push(new StackObject(executionManager.instantiateArray(executionContext, newClass, length)));
+                    stack.pushSized(new StackObject(executionManager.instantiateArray(executionContext, newClass, length)));
                     break;
                 case Opcodes.ARRAYLENGTH:
-                    array = stack.pop(StackObject.class);
+                    array = stack.popSized(StackObject.class);
                     if (!(array.value() instanceof ArrayObject)) {
                         throw new ExecutorException(executionContext, "Expected array but got " + array.getClass().getSimpleName());
                     }
-                    stack.push(new StackInt(((ArrayObject) array.value()).getElements().length));
+                    stack.pushSized(new StackInt(((ArrayObject) array.value()).getElements().length));
                     break;
                 case Opcodes.ATHROW:
-                    object = stack.pop(StackObject.class);
+                    object = stack.popSized(StackObject.class);
                     if (object.isNull()) {
                         result = ExceptionUtils.newException(executionContext, Types.NULL_POINTER_EXCEPTION);
                     } else if (!object.value().getClazz().isInstance(executionContext, Types.THROWABLE)) {
@@ -797,21 +797,21 @@ public class JVMMethodExecutor implements MethodExecutor {
                     break;
                 case Opcodes.CHECKCAST:
                     typeInsnNode = (TypeInsnNode) currentInstruction;
-                    object = stack.pop(StackObject.class);
+                    object = stack.popSized(StackObject.class);
                     if (object != StackObject.NULL && !object.value().getClazz().isInstance(executionContext, Type.getObjectType(typeInsnNode.desc))) {
                         result = ExceptionUtils.newException(executionContext, Types.CLASS_CAST_EXCEPTION, "Cannot cast " + object.value().getClazz().getClassNode().name + " to " + typeInsnNode.desc);
                     } else {
-                        stack.push(object.withType(Type.getObjectType(typeInsnNode.desc)));
+                        stack.pushSized(object.withType(Type.getObjectType(typeInsnNode.desc)));
                     }
                     break;
                 case Opcodes.INSTANCEOF:
                     typeInsnNode = (TypeInsnNode) currentInstruction;
-                    object = stack.pop(StackObject.class);
+                    object = stack.popSized(StackObject.class);
                     if (object.isNull()) {
-                        stack.push(StackInt.ZERO);
+                        stack.pushSized(StackInt.ZERO);
                     } else {
                         boolean isInstance = object.value().getClazz().isInstance(executionContext, Type.getObjectType(typeInsnNode.desc));
-                        stack.push(isInstance ? StackInt.ONE : StackInt.ZERO);
+                        stack.pushSized(isInstance ? StackInt.ONE : StackInt.ZERO);
                     }
                     break;
                 case Opcodes.MONITORENTER:
@@ -829,7 +829,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                     }
                     IntFunction<StackElement> arrayInitializer = null;
                     for (int i = multiANewArrayInsnNode.dims - 1; i >= 1; i--) {
-                        int dimensions = stack.pop(StackInt.class).value();
+                        int dimensions = stack.popSized(StackInt.class).value();
                         if (dimensions < 0) {
                             result = ExceptionUtils.newException(executionContext, Types.NEGATIVE_ARRAY_SIZE_EXCEPTION, "Dimension: " + dimensions);
                             break;
@@ -844,11 +844,11 @@ public class JVMMethodExecutor implements MethodExecutor {
                             }
                         };
                     }
-                    stack.push(new StackObject(executionManager.instantiateArray(executionContext, executionManager.loadClass(executionContext, arrayType), stack.pop(StackInt.class).value(), arrayInitializer)));
+                    stack.pushSized(new StackObject(executionManager.instantiateArray(executionContext, executionManager.loadClass(executionContext, arrayType), stack.popSized(StackInt.class).value(), arrayInitializer)));
                     break;
                 case Opcodes.IFNULL:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
-                    object = stack.pop(StackObject.class);
+                    object = stack.popSized(StackObject.class);
                     if (object.isNull()) {
                         //Jump
                         currentInstruction = jumpInsnNode.label;
@@ -856,7 +856,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                     break;
                 case Opcodes.IFNONNULL:
                     jumpInsnNode = (JumpInsnNode) currentInstruction;
-                    object = stack.pop(StackObject.class);
+                    object = stack.popSized(StackObject.class);
                     if (!object.isNull()) {
                         //Jump
                         currentInstruction = jumpInsnNode.label;
@@ -881,7 +881,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                         //A try catch block was found, jump to the handler, clear the stack and push the exception
                         currentInstruction = matchingTryCatchBlock.handler; //Jump
                         stack.clear();
-                        stack.push(new StackObject(result.getException()));
+                        stack.pushSized(new StackObject(result.getException()));
                         result = null;
                     }
                 } else {

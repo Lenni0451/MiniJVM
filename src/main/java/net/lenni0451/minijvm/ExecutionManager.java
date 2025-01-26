@@ -109,7 +109,7 @@ public class ExecutionManager {
             throw new ExecutorException(executionContext, "Unsupported type: " + type.getSort() + " (" + type + ")");
         }
         ExecutorClass executorClass = new ExecutorClass(executionContext, type, classNode);
-        this.loadedClasses.put(type, executorClass); //Add the class here to prevent infinite loops
+        this.loadedClasses.put(type, executorClass);
         return executorClass;
     }
 

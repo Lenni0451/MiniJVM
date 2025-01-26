@@ -8,6 +8,7 @@ import net.lenni0451.minijvm.execution.Executor;
 import net.lenni0451.minijvm.object.ExecutorClass;
 import net.lenni0451.minijvm.object.ExecutorObject;
 import net.lenni0451.minijvm.stack.StackElement;
+import net.lenni0451.minijvm.stack.StackObject;
 import org.objectweb.asm.Type;
 
 public class ExceptionUtils {
@@ -36,6 +37,14 @@ public class ExceptionUtils {
         ExecutionResult result = Executor.execute(executionContext, exceptionClass, initMethod.method(), exceptionObject, arguments);
         if (result.hasException()) throw new ExecutorException(executionContext, "Could not instantiate exception: " + exceptionType + " - " + result.getException());
         return ExecutionResult.exception(exceptionObject);
+    }
+
+    public static String getMessage(final ExecutionContext executionContext, final ExecutorObject exceptionObject) {
+        ExecutorClass clazz = exceptionObject.getClazz();
+        ExecutorClass.ResolvedMethod getMessage = clazz.findMethod(executionContext, "getMessage", "()Ljava/lang/String;");
+        ExecutionResult result = Executor.execute(executionContext, clazz, getMessage.method(), exceptionObject);
+        if (result.hasException()) throw new ExecutorException(executionContext, "Could not get message from exception: " + clazz.getType());
+        return ExecutorTypeUtils.fromExecutorString(executionContext, ((StackObject) result.getReturnValue()).value());
     }
 
 }

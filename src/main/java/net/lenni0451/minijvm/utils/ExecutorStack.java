@@ -27,23 +27,15 @@ public class ExecutorStack {
     }
 
     public void push(final StackElement element) {
-        switch (element.size()) {
-            case 1:
-                if (this.stackPointer >= this.stack.length) {
-                    throw new ExecutorException(this.executionContext, "Tried to push an element to the stack but the stack is full");
-                }
-                this.stack[this.stackPointer++] = element;
-                break;
-            case 2:
-                if (this.stackPointer + 1 >= this.stack.length) {
-                    throw new ExecutorException(this.executionContext, "Tried to push an element to the stack but the stack is full");
-                }
-                this.stack[this.stackPointer++] = element;
-                this.stack[this.stackPointer++] = element;
-                break;
-            default:
-                throw new ExecutorException(this.executionContext, "Tried to push an element to the stack with a size of " + element.size() + " but the stack only supports elements with a size of 1 or 2");
+        if (this.stackPointer >= this.stack.length) {
+            throw new ExecutorException(this.executionContext, "Tried to push an element to the stack but the stack is full");
         }
+        this.stack[this.stackPointer++] = element;
+    }
+
+    public void pushSized(final StackElement element) {
+        this.push(element);
+        if (element.size() == 2) this.push(element);
     }
 
     public StackElement pop() {
@@ -63,7 +55,7 @@ public class ExecutorStack {
         return element;
     }
 
-    public <T extends StackElement> T pop(final Class<T> expected) {
+    public <T extends StackElement> T popSized(final Class<T> expected) {
         StackElement element = this.popSized();
         if (!expected.isInstance(element)) {
             throw new ExecutorException(this.executionContext, "Tried to pop " + expected.getSimpleName() + " but the top element is " + element.getClass().getSimpleName());

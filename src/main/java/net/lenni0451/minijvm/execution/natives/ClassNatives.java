@@ -1,6 +1,7 @@
 package net.lenni0451.minijvm.execution.natives;
 
 import net.lenni0451.minijvm.ExecutionManager;
+import net.lenni0451.minijvm.execution.ExecutionResult;
 import net.lenni0451.minijvm.execution.MethodExecutor;
 import net.lenni0451.minijvm.object.ExecutorClass;
 import net.lenni0451.minijvm.object.types.ClassObject;
@@ -35,6 +36,10 @@ public class ClassNatives implements Consumer<ExecutionManager> {
         manager.registerMethodExecutor("java/lang/Class.isArray()Z", (executionContext, currentClass, currentMethod, instance, arguments) -> {
             boolean isArray = ((ClassObject) instance).getClassType().getClassNode().name.startsWith("[");
             return returnValue(new StackInt(isArray));
+        });
+        manager.registerMethodExecutor("java/lang/Class.isPrimitive()Z", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            ClassObject clazz = (ClassObject) instance;
+            return ExecutionResult.returnValue(new StackInt(Types.isPrimitive(clazz.getClassType().getType())));
         });
     }
 
