@@ -1,28 +1,31 @@
-package net.lenni0451.minijvm.context;
+package net.lenni0451.minijvm;
 
-import net.lenni0451.minijvm.ExecutionManager;
 import net.lenni0451.minijvm.object.ExecutorClass;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * This class is used to manage the current state of the executor.
+ * This class is used to manage the current state of the executor.<br>
+ * This is the equivalent of the Thread in the JVM.
  */
 public class ExecutionContext {
 
+    private static final AtomicInteger CONTEXT_ID = new AtomicInteger(0);
+
+    private final int id = CONTEXT_ID.getAndIncrement();
     private final ExecutionManager executionManager;
     private final List<StackFrame> stackFrames;
-    private final Map<ContextKey<?>, Object> contextData;
 
     public ExecutionContext(final ExecutionManager executionManager) {
         this.executionManager = executionManager;
         this.stackFrames = new ArrayList<>();
-        this.contextData = new HashMap<>();
+    }
+
+    public int getId() {
+        return this.id;
     }
 
     public ExecutionManager getExecutionManager() {
@@ -45,10 +48,6 @@ public class ExecutionContext {
 
     public StackFrame popStackFrame() {
         return this.stackFrames.remove(this.stackFrames.size() - 1);
-    }
-
-    public <T> T getContextData(final ContextKey<T> contextKey, final Supplier<T> initializer) {
-        return (T) this.contextData.computeIfAbsent(contextKey, key -> initializer.get());
     }
 
 

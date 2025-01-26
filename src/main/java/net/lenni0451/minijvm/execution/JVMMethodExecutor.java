@@ -1,8 +1,8 @@
 package net.lenni0451.minijvm.execution;
 
 import net.lenni0451.commons.asm.Modifiers;
+import net.lenni0451.minijvm.ExecutionContext;
 import net.lenni0451.minijvm.ExecutionManager;
-import net.lenni0451.minijvm.context.ExecutionContext;
 import net.lenni0451.minijvm.exception.ExecutorException;
 import net.lenni0451.minijvm.object.ExecutorClass;
 import net.lenni0451.minijvm.object.ExecutorObject;

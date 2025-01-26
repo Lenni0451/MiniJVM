@@ -3,7 +3,7 @@ package net.lenni0451.minijvm.object;
 import lombok.SneakyThrows;
 import net.lenni0451.commons.asm.ASMUtils;
 import net.lenni0451.commons.asm.Modifiers;
-import net.lenni0451.minijvm.context.ExecutionContext;
+import net.lenni0451.minijvm.ExecutionContext;
 import net.lenni0451.minijvm.execution.Executor;
 import net.lenni0451.minijvm.stack.StackElement;
 import net.lenni0451.minijvm.utils.ExecutorTypeUtils;

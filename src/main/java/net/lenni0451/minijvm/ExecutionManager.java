@@ -3,7 +3,6 @@ package net.lenni0451.minijvm;
 import lombok.SneakyThrows;
 import net.lenni0451.commons.asm.Modifiers;
 import net.lenni0451.commons.asm.provider.ClassProvider;
-import net.lenni0451.minijvm.context.ExecutionContext;
 import net.lenni0451.minijvm.exception.ExecutorException;
 import net.lenni0451.minijvm.execution.JVMMethodExecutor;
 import net.lenni0451.minijvm.execution.MethodExecutor;
@@ -69,6 +68,12 @@ public class ExecutionManager {
         this.accept(new SignalNatives());
     }
 
+    /**
+     * Create a new execution context.<br>
+     * It could be compared to a new thread in a normal JVM.
+     *
+     * @return The new execution context
+     */
     public ExecutionContext newContext() {
         return new ExecutionContext(this);
     }
@@ -77,7 +82,7 @@ public class ExecutionManager {
         consumer.accept(this);
     }
 
-    public void registerMethodExecutor(final String classMethodDescriptor, final MethodExecutor methodExecutor) {
+    public synchronized void registerMethodExecutor(final String classMethodDescriptor, final MethodExecutor methodExecutor) {
         this.methodExecutors.put(classMethodDescriptor, methodExecutor);
     }
 
@@ -92,7 +97,7 @@ public class ExecutionManager {
     }
 
     @SneakyThrows //TODO: Actually handle if classes can't be loaded
-    public ExecutorClass loadClass(final ExecutionContext executionContext, final Type type) {
+    public synchronized ExecutorClass loadClass(final ExecutionContext executionContext, final Type type) {
         ExecutorClass loadedClass = this.loadedClasses.get(type);
         if (loadedClass != null) return loadedClass;
 
@@ -118,7 +123,7 @@ public class ExecutionManager {
         return executorClass;
     }
 
-    public ExecutorObject instantiateClass(final ExecutionContext executionContext, final ExecutorClass executorClass) {
+    public synchronized ExecutorObject instantiateClass(final ExecutionContext executionContext, final ExecutorClass executorClass) {
         ExecutorObject instantiatedClass = this.classInstances.get(executorClass);
         if (instantiatedClass != null) return instantiatedClass;
 

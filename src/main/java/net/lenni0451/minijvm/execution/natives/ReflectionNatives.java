@@ -1,7 +1,7 @@
 package net.lenni0451.minijvm.execution.natives;
 
+import net.lenni0451.minijvm.ExecutionContext;
 import net.lenni0451.minijvm.ExecutionManager;
-import net.lenni0451.minijvm.context.ExecutionContext;
 import net.lenni0451.minijvm.stack.StackObject;
 
 import java.util.function.Consumer;
