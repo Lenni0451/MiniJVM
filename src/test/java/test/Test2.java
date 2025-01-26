@@ -17,7 +17,7 @@ public class Test2 {
 
         final double d = 1 / 0.75;
         ExecutorClass test4Class = manager.loadClass(context, Type.getType(Test2.class));
-        ExecutorClass.ResolvedMethod doitMethod = test4Class.findMethod("doit", "(D)D");
+        ExecutorClass.ResolvedMethod doitMethod = test4Class.findMethod(manager, context, "doit", "(D)D");
         ExecutionResult result = Executor.execute(manager, context, test4Class, doitMethod.method(), null, new StackDouble(d));
         System.out.println(result);
         System.out.println(doit(d));

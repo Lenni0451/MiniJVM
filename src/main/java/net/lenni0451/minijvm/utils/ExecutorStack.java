@@ -23,7 +23,7 @@ public class ExecutorStack {
     }
 
     public StackElement[] getStack() {
-        return this.stack.clone();
+        return Arrays.copyOf(this.stack, this.stackPointer);
     }
 
     public void push(final StackElement element) {

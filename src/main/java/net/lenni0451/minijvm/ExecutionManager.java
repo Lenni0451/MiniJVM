@@ -106,7 +106,6 @@ public class ExecutionManager {
         }
         ExecutorClass executorClass = new ExecutorClass(this, executionContext, type, classNode);
         this.loadedClasses.put(type, executorClass); //Add the class here to prevent infinite loops
-        executorClass.invokeStaticInit(this, executionContext);
         return executorClass;
     }
 
@@ -116,7 +115,7 @@ public class ExecutionManager {
 
         ExecutorObject classInstance = new ClassObject(this, executionContext, executorClass);
         { //Component type
-            ExecutorClass.ResolvedField componentTypeField = classInstance.getClazz().findField("componentType", "Ljava/lang/Class;");
+            ExecutorClass.ResolvedField componentTypeField = classInstance.getClazz().findField(this, executionContext, "componentType", "Ljava/lang/Class;");
             if (componentTypeField != null) {
                 if (executorClass.getType().getSort() == Type.ARRAY) {
                     ExecutorClass componentTypeClass = this.loadClass(executionContext, Types.arrayType(executorClass.getType()));
@@ -127,7 +126,7 @@ public class ExecutionManager {
             }
         }
         { //Name
-            ExecutorClass.ResolvedField nameField = classInstance.getClazz().findField("name", "Ljava/lang/String;");
+            ExecutorClass.ResolvedField nameField = classInstance.getClazz().findField(this, executionContext, "name", "Ljava/lang/String;");
             if (nameField != null) {
                 classInstance.setField(nameField.field(), ExecutorTypeUtils.parse(this, executionContext, executorClass.getClassNode().name));
             }

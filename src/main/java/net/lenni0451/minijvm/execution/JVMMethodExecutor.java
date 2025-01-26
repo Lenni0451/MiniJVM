@@ -635,7 +635,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                 case Opcodes.PUTSTATIC:
                     FieldInsnNode fieldInsnNode = (FieldInsnNode) currentInstruction;
                     ExecutorClass owner = executionManager.loadClass(executionContext, Type.getObjectType(fieldInsnNode.owner));
-                    ExecutorClass.ResolvedField fieldNode = owner.findField(fieldInsnNode.name, fieldInsnNode.desc);
+                    ExecutorClass.ResolvedField fieldNode = owner.findField(executionManager, executionContext, fieldInsnNode.name, fieldInsnNode.desc);
                     if (fieldNode == null) {
                         result = ExceptionUtils.newException(executionManager, executionContext, Types.NO_SUCH_FIELD_ERROR, fieldInsnNode.name);
                     } else {
@@ -654,7 +654,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                     if (object.isNull()) {
                         result = ExceptionUtils.newException(executionManager, executionContext, Types.NULL_POINTER_EXCEPTION, "Tried to access field of null object");
                     } else {
-                        fieldNode = object.value().getClazz().findField(fieldInsnNode.name, fieldInsnNode.desc);
+                        fieldNode = object.value().getClazz().findField(executionManager, executionContext, fieldInsnNode.name, fieldInsnNode.desc);
                         if (fieldNode == null) {
                             result = ExceptionUtils.newException(executionManager, executionContext, Types.NO_SUCH_FIELD_ERROR, fieldInsnNode.name);
                         } else {
@@ -669,7 +669,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                     if (object.isNull()) {
                         result = ExceptionUtils.newException(executionManager, executionContext, Types.NULL_POINTER_EXCEPTION, "Tried to access field of null object");
                     } else {
-                        fieldNode = object.value().getClazz().findField(fieldInsnNode.name, fieldInsnNode.desc);
+                        fieldNode = object.value().getClazz().findField(executionManager, executionContext, fieldInsnNode.name, fieldInsnNode.desc);
                         if (fieldNode == null) {
                             result = ExceptionUtils.newException(executionManager, executionContext, Types.NO_SUCH_FIELD_ERROR, fieldInsnNode.name);
                         } else {
@@ -698,9 +698,9 @@ public class JVMMethodExecutor implements MethodExecutor {
                         ExecutorClass.ResolvedMethod methodNode;
                         if (opcode == Opcodes.INVOKESPECIAL) {
                             ExecutorClass ownerClass = executionManager.loadClass(executionContext, Type.getObjectType(methodInsnNode.owner));
-                            methodNode = ownerClass.findMethod(methodInsnNode.name, methodInsnNode.desc);
+                            methodNode = ownerClass.findMethod(executionManager, executionContext, methodInsnNode.name, methodInsnNode.desc);
                         } else {
-                            methodNode = ownerObject.getClazz().findMethod(methodInsnNode.name, methodInsnNode.desc);
+                            methodNode = ownerObject.getClazz().findMethod(executionManager, executionContext, methodInsnNode.name, methodInsnNode.desc);
                         }
                         if (methodNode == null) {
                             if (ExecutionManager.DEBUG) {
@@ -730,7 +730,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                         stackElements.add(0, argumentType);
                     }
                     ExecutorClass ownerClass = executionManager.loadClass(executionContext, Type.getObjectType(methodInsnNode.owner));
-                    ExecutorClass.ResolvedMethod methodNode = ownerClass.findMethod(methodInsnNode.name, methodInsnNode.desc);
+                    ExecutorClass.ResolvedMethod methodNode = ownerClass.findMethod(executionManager, executionContext, methodInsnNode.name, methodInsnNode.desc);
                     if (methodNode == null) {
                         if (ExecutionManager.DEBUG) {
                             System.out.println("Cannot find method " + methodInsnNode.owner + "." + methodInsnNode.name + methodInsnNode.desc + " in " + ownerClass.getClassNode().name);

@@ -19,6 +19,7 @@ import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ExecutorClass {
 
@@ -26,6 +27,7 @@ public class ExecutorClass {
     private final ClassNode classNode;
     final Map<String, ExecutorClass> superClasses;
     private final Map<FieldNode, StackElement> staticFields;
+    private final AtomicBoolean initialized = new AtomicBoolean(false);
 
     public ExecutorClass(final ExecutionManager executionManager, final ExecutionContext executionContext, final Type type, final ClassNode classNode) {
         this.type = type;
@@ -70,6 +72,7 @@ public class ExecutorClass {
     }
 
     public void invokeStaticInit(final ExecutionManager executionManager, final ExecutionContext executionContext) {
+        if (!this.initialized.compareAndSet(false, true)) return;
         for (MethodNode method : this.classNode.methods) {
             if (Modifiers.has(method.access, Opcodes.ACC_STATIC) && method.name.equals("<clinit>")) {
                 Executor.execute(executionManager, executionContext, this, method, null);
@@ -92,7 +95,8 @@ public class ExecutorClass {
     }
 
     @Nullable
-    public ResolvedField findField(final String name, final String descriptor) {
+    public ResolvedField findField(final ExecutionManager executionManager, final ExecutionContext executionContext, final String name, final String descriptor) {
+        this.invokeStaticInit(executionManager, executionContext);
         for (Map.Entry<String, ExecutorClass> entry : this.superClasses.entrySet()) {
             FieldNode field = ASMUtils.getField(entry.getValue().classNode, name, descriptor);
             if (field != null) return new ResolvedField(entry.getValue(), field);
@@ -101,7 +105,8 @@ public class ExecutorClass {
     }
 
     @Nullable
-    public ResolvedMethod findMethod(final String name, final String descriptor) {
+    public ResolvedMethod findMethod(final ExecutionManager executionManager, final ExecutionContext executionContext, final String name, final String descriptor) {
+        this.invokeStaticInit(executionManager, executionContext);
         for (Map.Entry<String, ExecutorClass> entry : this.superClasses.entrySet()) {
             MethodNode method = ASMUtils.getMethod(entry.getValue().classNode, name, descriptor);
             if (method != null && !Modifiers.has(method.access, Opcodes.ACC_ABSTRACT)) return new ResolvedMethod(entry.getValue(), method);

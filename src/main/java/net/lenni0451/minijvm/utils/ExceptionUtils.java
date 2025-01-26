@@ -31,7 +31,7 @@ public class ExceptionUtils {
     private static ExecutionResult invoke(final ExecutionManager executionManager, final ExecutionContext executionContext, final Type exceptionType, final String constructorDesc, final StackElement... arguments) {
         ExecutorClass exceptionClass = executionManager.loadClass(executionContext, exceptionType);
         ExecutorObject exceptionObject = executionManager.instantiate(executionContext, exceptionClass);
-        ExecutorClass.ResolvedMethod initMethod = exceptionClass.findMethod("<init>", constructorDesc);
+        ExecutorClass.ResolvedMethod initMethod = exceptionClass.findMethod(executionManager, executionContext, "<init>", constructorDesc);
         if (initMethod == null) throw new ExecutorException(executionContext, "Could not find string constructor in exception class: " + exceptionType);
         ExecutionResult result = Executor.execute(executionManager, executionContext, exceptionClass, initMethod.method(), exceptionObject, arguments);
         if (result.hasException()) throw new ExecutorException(executionContext, "Could not instantiate exception: " + exceptionType + " - " + result.getException());
