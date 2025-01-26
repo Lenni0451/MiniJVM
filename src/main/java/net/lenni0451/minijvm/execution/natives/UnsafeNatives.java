@@ -7,6 +7,7 @@ import net.lenni0451.minijvm.object.ExecutorClass;
 import net.lenni0451.minijvm.object.ExecutorObject;
 import net.lenni0451.minijvm.object.types.ArrayObject;
 import net.lenni0451.minijvm.object.types.ClassObject;
+import net.lenni0451.minijvm.stack.StackElement;
 import net.lenni0451.minijvm.stack.StackInt;
 import net.lenni0451.minijvm.stack.StackLong;
 import net.lenni0451.minijvm.stack.StackObject;
@@ -17,7 +18,9 @@ import net.lenni0451.minijvm.utils.UnsafeUtils;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldNode;
 
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static net.lenni0451.minijvm.execution.ExecutionResult.returnValue;
 
@@ -54,40 +57,9 @@ public class UnsafeNatives implements Consumer<ExecutionManager> {
             return returnValue(new StackLong(UnsafeUtils.getFieldHashCode(fieldNode)));
         });
         manager.registerMethodExecutor("jdk/internal/misc/Unsafe.fullFence()V", MethodExecutor.NOOP_VOID);
-        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.compareAndSetInt(Ljava/lang/Object;JII)Z", (executionContext, currentClass, currentMethod, instance, arguments) -> {
-            ExecutorObject object = ((StackObject) arguments[0]).value();
-            long offset = ((StackLong) arguments[1]).value();
-            int expected = ((StackInt) arguments[2]).value();
-            int update = ((StackInt) arguments[3]).value();
-            if (object instanceof ArrayObject array) {
-                offset -= ARRAY_BASE_OFFSET;
-                offset /= UnsafeUtils.arrayIndexScale(Types.arrayType(array.getClazz().getType()));
-                if (offset < 0 || offset >= array.getElements().length) {
-                    throw new ExecutorException(executionContext, "Tried writing to invalid array index: " + offset + "/" + array.getElements().length);
-                }
-
-                int current = ((StackInt) array.getElements()[(int) offset]).value();
-                if (current == expected) {
-                    array.getElements()[(int) offset] = new StackInt(update);
-                    return returnValue(StackInt.ONE);
-                } else {
-                    return returnValue(StackInt.ZERO);
-                }
-            } else {
-                FieldNode field = UnsafeUtils.getFieldByHashCode(object.getClazz(), offset);
-                if (field == null) {
-                    throw new ExecutorException(executionContext, "Tried writing to invalid field offset: " + offset);
-                }
-
-                int current = ((StackInt) object.getField(field)).value();
-                if (current == expected) {
-                    object.setField(field, new StackInt(update));
-                    return returnValue(StackInt.ONE);
-                } else {
-                    return returnValue(StackInt.ZERO);
-                }
-            }
-        });
+        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.compareAndSetInt(Ljava/lang/Object;JII)Z", this.compareAndSet(e -> ((StackInt) e).value(), StackInt::new, Integer::equals));
+        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.compareAndSetLong(Ljava/lang/Object;JJJ)Z", this.compareAndSet(e -> ((StackLong) e).value(), StackLong::new, Long::equals));
+        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.compareAndSetReference(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z", this.compareAndSet(e -> ((StackObject) e).value(), StackObject::new, (o1, o2) -> o1 == o2));
         manager.registerMethodExecutor("jdk/internal/misc/Unsafe.getReferenceVolatile(Ljava/lang/Object;J)Ljava/lang/Object;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
             ExecutorObject object = ((StackObject) arguments[0]).value();
             long offset = ((StackLong) arguments[1]).value();
@@ -106,11 +78,14 @@ public class UnsafeNatives implements Consumer<ExecutionManager> {
                 return returnValue(object.getField(field));
             }
         });
-        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.compareAndSetReference(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z", (MethodExecutor) (executionContext, currentClass, currentMethod, instance, arguments) -> {
+    }
+
+    private <T> MethodExecutor compareAndSet(final Function<StackElement, T> getter, final Function<T, StackElement> constructor, final BiPredicate<T, T> comparator) {
+        return (executionContext, currentClass, currentMethod, instance, arguments) -> {
             ExecutorObject object = ((StackObject) arguments[0]).value();
             long offset = ((StackLong) arguments[1]).value();
-            ExecutorObject expected = ((StackObject) arguments[2]).value();
-            ExecutorObject update = ((StackObject) arguments[3]).value();
+            T expected = getter.apply(arguments[2]);
+            T update = getter.apply(arguments[3]);
             if (object instanceof ArrayObject array) {
                 offset -= ARRAY_BASE_OFFSET;
                 offset /= UnsafeUtils.arrayIndexScale(Types.arrayType(array.getClazz().getType()));
@@ -118,9 +93,9 @@ public class UnsafeNatives implements Consumer<ExecutionManager> {
                     throw new ExecutorException(executionContext, "Tried writing to invalid array index: " + offset + "/" + array.getElements().length);
                 }
 
-                ExecutorObject current = ((StackObject) array.getElements()[(int) offset]).value();
-                if (current == expected) {
-                    array.getElements()[(int) offset] = new StackObject(update);
+                T current = getter.apply(array.getElements()[(int) offset]);
+                if (comparator.test(current, expected)) {
+                    array.getElements()[(int) offset] = constructor.apply(update);
                     return returnValue(StackInt.ONE);
                 } else {
                     return returnValue(StackInt.ZERO);
@@ -131,15 +106,15 @@ public class UnsafeNatives implements Consumer<ExecutionManager> {
                     throw new ExecutorException(executionContext, "Tried writing to invalid field offset: " + offset);
                 }
 
-                ExecutorObject current = ((StackObject) object.getField(field)).value();
-                if (current == expected) {
-                    object.setField(field, new StackObject(update));
+                T current = getter.apply(object.getField(field));
+                if (comparator.test(current, expected)) {
+                    object.setField(field, constructor.apply(update));
                     return returnValue(StackInt.ONE);
                 } else {
                     return returnValue(StackInt.ZERO);
                 }
             }
-        });
+        };
     }
 
 }

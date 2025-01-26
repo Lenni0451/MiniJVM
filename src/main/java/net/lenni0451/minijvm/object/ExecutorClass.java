@@ -81,6 +81,7 @@ public class ExecutorClass {
                 Executor.execute(executionContext, this, method, null);
             }
         }
+        for (ExecutorClass superClass : this.superClasses.values()) superClass.invokeStaticInit(executionContext);
     }
 
     public boolean isInstance(final ExecutionContext executionContext, final Type type) {

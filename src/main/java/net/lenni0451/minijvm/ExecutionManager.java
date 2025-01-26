@@ -62,6 +62,11 @@ public class ExecutionManager {
         this.accept(new ThrowableNatives());
         this.accept(new ThreadNatives());
         this.accept(new ClassLoaderNatives());
+        this.accept(new FileDescriptorNatives());
+        this.accept(new FileInputStreamNatives());
+        this.accept(new FileOutputStreamNatives());
+        this.accept(new ScopedMemoryAccessNatives());
+        this.accept(new SignalNatives());
     }
 
     public ExecutionContext newContext() {

@@ -1,7 +1,10 @@
 package net.lenni0451.minijvm.execution.natives;
 
 import net.lenni0451.minijvm.ExecutionManager;
+import net.lenni0451.minijvm.exception.ExecutorException;
+import net.lenni0451.minijvm.execution.ExecutionResult;
 import net.lenni0451.minijvm.execution.MethodExecutor;
+import net.lenni0451.minijvm.object.ExecutorClass;
 import net.lenni0451.minijvm.object.types.ArrayObject;
 import net.lenni0451.minijvm.stack.StackInt;
 import net.lenni0451.minijvm.stack.StackLong;
@@ -51,6 +54,24 @@ public class SystemNatives implements Consumer<ExecutionManager> {
         });
         manager.registerMethodExecutor("java/lang/System.currentTimeMillis()J", (executionContext, currentClass, currentMethod, instance, arguments) -> {
             return returnValue(new StackLong(System.currentTimeMillis()));
+        });
+        manager.registerMethodExecutor("java/lang/System.setIn0(Ljava/io/InputStream;)V", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            ExecutorClass.ResolvedField field = currentClass.findField(executionContext, "in", "Ljava/io/InputStream;");
+            if (field == null) throw new ExecutorException(executionContext, "Could not find 'in' field in System class");
+            field.set(arguments[0]);
+            return ExecutionResult.voidResult();
+        });
+        manager.registerMethodExecutor("java/lang/System.setOut0(Ljava/io/PrintStream;)V", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            ExecutorClass.ResolvedField field = currentClass.findField(executionContext, "out", "Ljava/io/PrintStream;");
+            if (field == null) throw new ExecutorException(executionContext, "Could not find 'out' field in System class");
+            field.set(arguments[0]);
+            return ExecutionResult.voidResult();
+        });
+        manager.registerMethodExecutor("java/lang/System.setErr0(Ljava/io/PrintStream;)V", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            ExecutorClass.ResolvedField field = currentClass.findField(executionContext, "err", "Ljava/io/PrintStream;");
+            if (field == null) throw new ExecutorException(executionContext, "Could not find 'err' field in System class");
+            field.set(arguments[0]);
+            return ExecutionResult.voidResult();
         });
     }
 
