@@ -1,7 +1,6 @@
 package net.lenni0451.minijvm.object;
 
 import net.lenni0451.commons.asm.Modifiers;
-import net.lenni0451.minijvm.ExecutionManager;
 import net.lenni0451.minijvm.context.ExecutionContext;
 import net.lenni0451.minijvm.stack.StackElement;
 import net.lenni0451.minijvm.utils.ExecutorTypeUtils;
@@ -17,18 +16,18 @@ public class ExecutorObject {
     private final ExecutorClass clazz;
     private final Map<FieldNode, StackElement> fields;
 
-    public ExecutorObject(final ExecutionManager executionManager, final ExecutionContext executionContext, final ExecutorClass clazz) {
+    public ExecutorObject(final ExecutionContext executionContext, final ExecutorClass clazz) {
         this.clazz = clazz;
         this.fields = new HashMap<>();
 
-        this.initFields(executionManager, executionContext);
+        this.initFields(executionContext);
     }
 
-    private void initFields(final ExecutionManager executionManager, final ExecutionContext executionContext) {
+    private void initFields(final ExecutionContext executionContext) {
         for (ExecutorClass executorClass : this.clazz.superClasses.values()) {
             for (FieldNode field : executorClass.getClassNode().fields) {
                 if (Modifiers.has(field.access, Opcodes.ACC_STATIC)) continue;
-                StackElement value = ExecutorTypeUtils.parse(executionManager, executionContext, field.value);
+                StackElement value = ExecutorTypeUtils.parse(executionContext, field.value);
                 if (value.isNull()) value = ExecutorTypeUtils.getFieldDefault(ExecutorTypeUtils.typeToStackType(Type.getType(field.desc)));
                 this.fields.put(field, value);
             }

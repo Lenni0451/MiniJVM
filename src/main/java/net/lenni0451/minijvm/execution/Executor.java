@@ -12,7 +12,7 @@ import org.objectweb.asm.tree.MethodNode;
 
 public class Executor {
 
-    public static ExecutionResult execute(final ExecutionManager executionManager, final ExecutionContext executionContext, final ExecutorClass currentClass, final MethodNode currentMethod, final ExecutorObject instance, final StackElement... arguments) {
+    public static ExecutionResult execute(final ExecutionContext executionContext, final ExecutorClass currentClass, final MethodNode currentMethod, final ExecutorObject instance, final StackElement... arguments) {
         if (ExecutionManager.DEBUG) {
             System.out.println("Invoking method: " + currentClass.getClassNode().name + " " + currentMethod.name + currentMethod.desc);
         }
@@ -24,8 +24,8 @@ public class Executor {
         }
 
         executionContext.pushStackFrame(currentClass, currentMethod, Modifiers.has(currentMethod.access, Opcodes.ACC_NATIVE) ? -2 : -1);
-        MethodExecutor methodExecutor = executionManager.getMethodExecutor(executionContext, currentClass.getClassNode().name, currentMethod);
-        ExecutionResult result = methodExecutor.execute(executionManager, executionContext, currentClass, currentMethod, instance, arguments);
+        MethodExecutor methodExecutor = executionContext.getExecutionManager().getMethodExecutor(executionContext, currentClass.getClassNode().name, currentMethod);
+        ExecutionResult result = methodExecutor.execute(executionContext, currentClass, currentMethod, instance, arguments);
         if (!currentMethod.desc.endsWith("V") && !result.hasException() && !result.hasReturnValue()) {
             throw new ExecutorException(executionContext, "Method " + currentClass.getClassNode().name + "." + currentMethod.name + currentMethod.desc + " did not return a value");
         } else if (currentMethod.desc.endsWith("V") && result.hasReturnValue()) {

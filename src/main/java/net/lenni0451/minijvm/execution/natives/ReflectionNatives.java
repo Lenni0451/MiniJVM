@@ -12,7 +12,7 @@ public class ReflectionNatives implements Consumer<ExecutionManager> {
 
     @Override
     public void accept(ExecutionManager manager) {
-        manager.registerMethodExecutor("jdk/internal/reflect/Reflection.getCallerClass()Ljava/lang/Class;", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
+        manager.registerMethodExecutor("jdk/internal/reflect/Reflection.getCallerClass()Ljava/lang/Class;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
             ExecutionContext.StackFrame[] stackFrames = executionContext.getStackFrames();
             ExecutionContext.StackFrame firstFrame = stackFrames[stackFrames.length - 1]; //TODO: What to do if no class was found?
             for (int i = stackFrames.length - 1; i >= 0; i--) {
@@ -24,7 +24,7 @@ public class ReflectionNatives implements Consumer<ExecutionManager> {
                 firstFrame = stackFrame;
                 break;
             }
-            return returnValue(new StackObject(executionManager.instantiateClass(executionContext, firstFrame.getExecutorClass())));
+            return returnValue(new StackObject(executionContext.getExecutionManager().instantiateClass(executionContext, firstFrame.getExecutorClass())));
         });
     }
 

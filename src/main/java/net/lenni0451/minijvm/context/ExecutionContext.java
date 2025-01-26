@@ -1,5 +1,6 @@
 package net.lenni0451.minijvm.context;
 
+import net.lenni0451.minijvm.ExecutionManager;
 import net.lenni0451.minijvm.object.ExecutorClass;
 import org.objectweb.asm.tree.MethodNode;
 
@@ -14,12 +15,18 @@ import java.util.function.Supplier;
  */
 public class ExecutionContext {
 
+    private final ExecutionManager executionManager;
     private final List<StackFrame> stackFrames;
     private final Map<ContextKey<?>, Object> contextData;
 
-    public ExecutionContext() {
+    public ExecutionContext(final ExecutionManager executionManager) {
+        this.executionManager = executionManager;
         this.stackFrames = new ArrayList<>();
         this.contextData = new HashMap<>();
+    }
+
+    public ExecutionManager getExecutionManager() {
+        return this.executionManager;
     }
 
     public StackFrame getCurrentStackFrame() {

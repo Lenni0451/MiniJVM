@@ -12,11 +12,11 @@ public class DoubleNatives implements Consumer<ExecutionManager> {
 
     @Override
     public void accept(ExecutionManager manager) {
-        manager.registerMethodExecutor("java/lang/Double.doubleToRawLongBits(D)J", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
+        manager.registerMethodExecutor("java/lang/Double.doubleToRawLongBits(D)J", (executionContext, currentClass, currentMethod, instance, arguments) -> {
             double value = ((StackDouble) arguments[0]).value();
             return returnValue(new StackLong(Double.doubleToRawLongBits(value)));
         });
-        manager.registerMethodExecutor("java/lang/Double.longBitsToDouble(J)D", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
+        manager.registerMethodExecutor("java/lang/Double.longBitsToDouble(J)D", (executionContext, currentClass, currentMethod, instance, arguments) -> {
             long value = ((StackLong) arguments[0]).value();
             return returnValue(new StackDouble(Double.longBitsToDouble(value)));
         });

@@ -21,18 +21,18 @@ public class ClassNatives implements Consumer<ExecutionManager> {
     @Override
     public void accept(ExecutionManager manager) {
         manager.registerMethodExecutor("java/lang/Class.registerNatives()V", MethodExecutor.NOOP_VOID);
-        manager.registerMethodExecutor("java/lang/Class.desiredAssertionStatus0(Ljava/lang/Class;)Z", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
+        manager.registerMethodExecutor("java/lang/Class.desiredAssertionStatus0(Ljava/lang/Class;)Z", (executionContext, currentClass, currentMethod, instance, arguments) -> {
             return returnValue(StackInt.ZERO);
         });
-        manager.registerMethodExecutor("java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
-            String className = ExecutorTypeUtils.fromExecutorString(executionManager, executionContext, ((StackObject) arguments[0]).value());
+        manager.registerMethodExecutor("java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            String className = ExecutorTypeUtils.fromExecutorString(executionContext, ((StackObject) arguments[0]).value());
             if (!ClassUtils.PRIMITIVE_CLASS_TO_DESCRIPTOR.containsKey(className)) {
-                return ExceptionUtils.newException(executionManager, executionContext, Types.CLASS_NOT_FOUND_EXCEPTION, className);
+                return ExceptionUtils.newException(executionContext, Types.CLASS_NOT_FOUND_EXCEPTION, className);
             }
-            ExecutorClass primitiveClass = executionManager.loadClass(executionContext, Type.getType(ClassUtils.PRIMITIVE_CLASS_TO_DESCRIPTOR.get(className)));
-            return returnValue(new StackObject(executionManager.instantiateClass(executionContext, primitiveClass)));
+            ExecutorClass primitiveClass = executionContext.getExecutionManager().loadClass(executionContext, Type.getType(ClassUtils.PRIMITIVE_CLASS_TO_DESCRIPTOR.get(className)));
+            return returnValue(new StackObject(executionContext.getExecutionManager().instantiateClass(executionContext, primitiveClass)));
         });
-        manager.registerMethodExecutor("java/lang/Class.isArray()Z", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
+        manager.registerMethodExecutor("java/lang/Class.isArray()Z", (executionContext, currentClass, currentMethod, instance, arguments) -> {
             boolean isArray = ((ClassObject) instance).getClassType().getClassNode().name.startsWith("[");
             return returnValue(new StackInt(isArray));
         });

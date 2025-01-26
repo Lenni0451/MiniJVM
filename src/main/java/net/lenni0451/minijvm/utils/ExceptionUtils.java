@@ -12,28 +12,28 @@ import org.objectweb.asm.Type;
 
 public class ExceptionUtils {
 
-    public static ExecutionResult newException(final ExecutionManager executionManager, final ExecutionContext executionContext, final Type exceptionType) {
+    public static ExecutionResult newException(final ExecutionContext executionContext, final Type exceptionType) {
         if (ExecutionManager.DEBUG) {
             System.out.println("Creating new exception: " + exceptionType);
             for (ExecutionContext.StackFrame stackFrame : executionContext.getStackFrames()) System.out.println(" -> " + stackFrame);
         }
-        return invoke(executionManager, executionContext, exceptionType, "()V");
+        return invoke(executionContext, exceptionType, "()V");
     }
 
-    public static ExecutionResult newException(final ExecutionManager executionManager, final ExecutionContext executionContext, final Type exceptionType, final String message) {
+    public static ExecutionResult newException(final ExecutionContext executionContext, final Type exceptionType, final String message) {
         if (ExecutionManager.DEBUG) {
             System.out.println("Creating new exception: " + exceptionType + " with message: " + message);
             for (ExecutionContext.StackFrame stackFrame : executionContext.getStackFrames()) System.out.println(" -> " + stackFrame);
         }
-        return invoke(executionManager, executionContext, exceptionType, "(Ljava/lang/String;)V", ExecutorTypeUtils.parse(executionManager, executionContext, message));
+        return invoke(executionContext, exceptionType, "(Ljava/lang/String;)V", ExecutorTypeUtils.parse(executionContext, message));
     }
 
-    private static ExecutionResult invoke(final ExecutionManager executionManager, final ExecutionContext executionContext, final Type exceptionType, final String constructorDesc, final StackElement... arguments) {
-        ExecutorClass exceptionClass = executionManager.loadClass(executionContext, exceptionType);
-        ExecutorObject exceptionObject = executionManager.instantiate(executionContext, exceptionClass);
-        ExecutorClass.ResolvedMethod initMethod = exceptionClass.findMethod(executionManager, executionContext, "<init>", constructorDesc);
+    private static ExecutionResult invoke(final ExecutionContext executionContext, final Type exceptionType, final String constructorDesc, final StackElement... arguments) {
+        ExecutorClass exceptionClass = executionContext.getExecutionManager().loadClass(executionContext, exceptionType);
+        ExecutorObject exceptionObject = executionContext.getExecutionManager().instantiate(executionContext, exceptionClass);
+        ExecutorClass.ResolvedMethod initMethod = exceptionClass.findMethod(executionContext, "<init>", constructorDesc);
         if (initMethod == null) throw new ExecutorException(executionContext, "Could not find string constructor in exception class: " + exceptionType);
-        ExecutionResult result = Executor.execute(executionManager, executionContext, exceptionClass, initMethod.method(), exceptionObject, arguments);
+        ExecutionResult result = Executor.execute(executionContext, exceptionClass, initMethod.method(), exceptionObject, arguments);
         if (result.hasException()) throw new ExecutorException(executionContext, "Could not instantiate exception: " + exceptionType + " - " + result.getException());
         return ExecutionResult.exception(exceptionObject);
     }

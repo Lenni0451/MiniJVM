@@ -16,18 +16,18 @@ public class ObjectNatives implements Consumer<ExecutionManager> {
 
     @Override
     public void accept(ExecutionManager manager) {
-        manager.registerMethodExecutor("java/lang/Object.hashCode()I", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
+        manager.registerMethodExecutor("java/lang/Object.hashCode()I", (executionContext, currentClass, currentMethod, instance, arguments) -> {
             return returnValue(new StackInt(instance.hashCode()));
         });
-        manager.registerMethodExecutor("java/lang/Object.getClass()Ljava/lang/Class;", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
-            return returnValue(new StackObject(executionManager.instantiateClass(executionContext, instance.getClazz())));
+        manager.registerMethodExecutor("java/lang/Object.getClass()Ljava/lang/Class;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            return returnValue(new StackObject(executionContext.getExecutionManager().instantiateClass(executionContext, instance.getClazz())));
         });
-        manager.registerMethodExecutor("java/lang/Object.clone()Ljava/lang/Object;", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
+        manager.registerMethodExecutor("java/lang/Object.clone()Ljava/lang/Object;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
             if (instance instanceof ArrayObject) {
-                ExecutorObject clone = executionManager.instantiateArray(executionContext, instance.getClazz(), ((ArrayObject) instance).getElements().clone());
+                ExecutorObject clone = executionContext.getExecutionManager().instantiateArray(executionContext, instance.getClazz(), ((ArrayObject) instance).getElements().clone());
                 return returnValue(new StackObject(clone));
             } else {
-                return ExceptionUtils.newException(executionManager, executionContext, Types.CLONE_NOT_SUPPORTED_EXCEPTION, "Object does not support cloning");
+                return ExceptionUtils.newException(executionContext, Types.CLONE_NOT_SUPPORTED_EXCEPTION, "Object does not support cloning");
             }
         });
     }

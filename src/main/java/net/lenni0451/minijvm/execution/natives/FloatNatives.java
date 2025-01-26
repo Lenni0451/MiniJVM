@@ -12,7 +12,7 @@ public class FloatNatives implements Consumer<ExecutionManager> {
 
     @Override
     public void accept(ExecutionManager manager) {
-        manager.registerMethodExecutor("java/lang/Float.floatToRawIntBits(F)I", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
+        manager.registerMethodExecutor("java/lang/Float.floatToRawIntBits(F)I", (executionContext, currentClass, currentMethod, instance, arguments) -> {
             float value = ((StackFloat) arguments[0]).value();
             return returnValue(new StackInt(Float.floatToRawIntBits(value)));
         });

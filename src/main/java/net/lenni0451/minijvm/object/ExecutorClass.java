@@ -3,7 +3,6 @@ package net.lenni0451.minijvm.object;
 import lombok.SneakyThrows;
 import net.lenni0451.commons.asm.ASMUtils;
 import net.lenni0451.commons.asm.Modifiers;
-import net.lenni0451.minijvm.ExecutionManager;
 import net.lenni0451.minijvm.context.ExecutionContext;
 import net.lenni0451.minijvm.execution.Executor;
 import net.lenni0451.minijvm.stack.StackElement;
@@ -29,14 +28,14 @@ public class ExecutorClass {
     private final Map<FieldNode, StackElement> staticFields;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
 
-    public ExecutorClass(final ExecutionManager executionManager, final ExecutionContext executionContext, final Type type, final ClassNode classNode) {
+    public ExecutorClass(final ExecutionContext executionContext, final Type type, final ClassNode classNode) {
         this.type = type;
         this.classNode = classNode;
         this.superClasses = new LinkedHashMap<>();
         this.staticFields = new HashMap<>();
 
-        this.initSuperClasses(executionManager, executionContext);
-        this.initFields(executionManager, executionContext);
+        this.initSuperClasses(executionContext);
+        this.initFields(executionContext);
     }
 
     public Type getType() {
@@ -48,55 +47,55 @@ public class ExecutorClass {
     }
 
     @SneakyThrows
-    private void initSuperClasses(final ExecutionManager executionManager, final ExecutionContext executionContext) {
+    private void initSuperClasses(final ExecutionContext executionContext) {
         this.superClasses.put(this.classNode.name, this);
         for (String itf : this.classNode.interfaces) {
-            this.superClasses.put(itf, executionManager.loadClass(executionContext, Type.getObjectType(itf)));
+            this.superClasses.put(itf, executionContext.getExecutionManager().loadClass(executionContext, Type.getObjectType(itf)));
         }
 
         ExecutorClass superClass = this;
         while (superClass.classNode.superName != null) {
-            superClass = executionManager.loadClass(executionContext, Type.getObjectType(superClass.classNode.superName));
+            superClass = executionContext.getExecutionManager().loadClass(executionContext, Type.getObjectType(superClass.classNode.superName));
             this.superClasses.putAll(superClass.superClasses);
         }
     }
 
-    private void initFields(final ExecutionManager executionManager, final ExecutionContext executionContext) {
+    private void initFields(final ExecutionContext executionContext) {
         for (FieldNode field : this.classNode.fields) {
             if (Modifiers.has(field.access, Opcodes.ACC_STATIC)) {
-                StackElement value = ExecutorTypeUtils.parse(executionManager, executionContext, field.value);
+                StackElement value = ExecutorTypeUtils.parse(executionContext, field.value);
                 if (value.isNull()) value = ExecutorTypeUtils.getFieldDefault(ExecutorTypeUtils.typeToStackType(Type.getType(field.desc)));
                 this.staticFields.put(field, value);
             }
         }
     }
 
-    public void invokeStaticInit(final ExecutionManager executionManager, final ExecutionContext executionContext) {
+    public void invokeStaticInit(final ExecutionContext executionContext) {
         if (!this.initialized.compareAndSet(false, true)) return;
         for (MethodNode method : this.classNode.methods) {
             if (Modifiers.has(method.access, Opcodes.ACC_STATIC) && method.name.equals("<clinit>")) {
-                Executor.execute(executionManager, executionContext, this, method, null);
+                Executor.execute(executionContext, this, method, null);
             }
         }
     }
 
-    public boolean isInstance(final ExecutionManager executionManager, final ExecutionContext executionContext, final Type type) {
+    public boolean isInstance(final ExecutionContext executionContext, final Type type) {
         if (this.type.getSort() == Type.ARRAY && type.getSort() == Type.ARRAY) {
             if (type.getElementType().equals(Types.OBJECT)) {
                 return this.type.getDimensions() >= type.getDimensions();
             } else if (this.type.getDimensions() != type.getDimensions()) {
                 return false;
             } else {
-                ExecutorClass elementClass = executionManager.loadClass(executionContext, this.type.getElementType());
-                return elementClass.isInstance(executionManager, executionContext, type.getElementType());
+                ExecutorClass elementClass = executionContext.getExecutionManager().loadClass(executionContext, this.type.getElementType());
+                return elementClass.isInstance(executionContext, type.getElementType());
             }
         }
         return this.superClasses.containsKey(type.getInternalName());
     }
 
     @Nullable
-    public ResolvedField findField(final ExecutionManager executionManager, final ExecutionContext executionContext, final String name, final String descriptor) {
-        this.invokeStaticInit(executionManager, executionContext);
+    public ResolvedField findField(final ExecutionContext executionContext, final String name, final String descriptor) {
+        this.invokeStaticInit(executionContext);
         for (Map.Entry<String, ExecutorClass> entry : this.superClasses.entrySet()) {
             FieldNode field = ASMUtils.getField(entry.getValue().classNode, name, descriptor);
             if (field != null) return new ResolvedField(entry.getValue(), field);
@@ -105,8 +104,8 @@ public class ExecutorClass {
     }
 
     @Nullable
-    public ResolvedMethod findMethod(final ExecutionManager executionManager, final ExecutionContext executionContext, final String name, final String descriptor) {
-        this.invokeStaticInit(executionManager, executionContext);
+    public ResolvedMethod findMethod(final ExecutionContext executionContext, final String name, final String descriptor) {
+        this.invokeStaticInit(executionContext);
         for (Map.Entry<String, ExecutorClass> entry : this.superClasses.entrySet()) {
             MethodNode method = ASMUtils.getMethod(entry.getValue().classNode, name, descriptor);
             if (method != null && !Modifiers.has(method.access, Opcodes.ACC_ABSTRACT)) return new ResolvedMethod(entry.getValue(), method);

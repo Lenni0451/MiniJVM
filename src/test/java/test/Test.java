@@ -42,11 +42,11 @@ public class Test {
             classes.put("Test", ClassIO.toStacklessBytes(node));
 
             ExecutionManager manager = new ExecutionManager(new MapClassProvider(classes, MapClassProvider.NameFormat.SLASH).then(new LoaderClassProvider()));
-            ExecutionContext context = new ExecutionContext();
+            ExecutionContext context = manager.newContext();
             ExecutorClass clazz = manager.loadClass(context, Type.getObjectType("Test"));
-            StackElement returnValue = Executor.execute(manager, context, clazz, methodNode, null).getReturnValue();
+            StackElement returnValue = Executor.execute(context, clazz, methodNode, null).getReturnValue();
             System.out.println(returnValue);
-            System.out.println(ExecutorTypeUtils.fromExecutorString(manager, context, ((StackObject) returnValue).value()));
+            System.out.println(ExecutorTypeUtils.fromExecutorString(context, ((StackObject) returnValue).value()));
         } catch (ExecutorException e) {
             e.printStackTrace();
             for (ExecutionContext.StackFrame stackFrame : e.getStackFrames()) {

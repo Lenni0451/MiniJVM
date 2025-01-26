@@ -13,12 +13,12 @@ public class Test2 {
 
     public static void main(String[] args) {
         ExecutionManager manager = new ExecutionManager(new LoaderClassProvider());
-        ExecutionContext context = new ExecutionContext();
+        ExecutionContext context = manager.newContext();
 
         final double d = 1 / 0.75;
         ExecutorClass test4Class = manager.loadClass(context, Type.getType(Test2.class));
-        ExecutorClass.ResolvedMethod doitMethod = test4Class.findMethod(manager, context, "doit", "(D)D");
-        ExecutionResult result = Executor.execute(manager, context, test4Class, doitMethod.method(), null, new StackDouble(d));
+        ExecutorClass.ResolvedMethod doitMethod = test4Class.findMethod(context, "doit", "(D)D");
+        ExecutionResult result = Executor.execute(context, test4Class, doitMethod.method(), null, new StackDouble(d));
         System.out.println(result);
         System.out.println(doit(d));
     }

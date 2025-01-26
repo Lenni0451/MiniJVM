@@ -26,7 +26,8 @@ import java.util.stream.Collectors;
 public class JVMMethodExecutor implements MethodExecutor {
 
     @Override
-    public ExecutionResult execute(ExecutionManager executionManager, ExecutionContext executionContext, ExecutorClass currentClass, MethodNode currentMethod, ExecutorObject instance, StackElement[] arguments) {
+    public ExecutionResult execute(ExecutionContext executionContext, ExecutorClass currentClass, MethodNode currentMethod, ExecutorObject instance, StackElement[] arguments) {
+        ExecutionManager executionManager = executionContext.getExecutionManager();
         boolean isStatic = Modifiers.has(currentMethod.access, Opcodes.ACC_STATIC);
         StackElement[] locals = new StackElement[currentMethod.maxLocals];
         {
@@ -101,7 +102,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                     break;
                 case Opcodes.LDC:
                     LdcInsnNode ldcInsnNode = (LdcInsnNode) currentInstruction;
-                    stack.push(ExecutorTypeUtils.parse(executionManager, executionContext, ldcInsnNode.cst));
+                    stack.push(ExecutorTypeUtils.parse(executionContext, ldcInsnNode.cst));
                     break;
                 case Opcodes.ILOAD:
                 case Opcodes.LLOAD:
@@ -126,7 +127,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                     StackElement[] arrayElements = ((ArrayObject) array.value()).getElements();
                     //TODO: Type checks
                     if (index.value() < 0 || index.value() >= arrayElements.length) {
-                        result = ExceptionUtils.newException(executionManager, executionContext, Types.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION, "Index: " + index.value() + ", Length: " + arrayElements.length);
+                        result = ExceptionUtils.newException(executionContext, Types.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION, "Index: " + index.value() + ", Length: " + arrayElements.length);
                     } else {
                         value = arrayElements[index.value()];
                         if (opcode == Opcodes.BALOAD) value = new StackInt((byte) ((StackInt) value).value());
@@ -159,7 +160,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                     //TODO: Type checks
                     arrayElements = ((ArrayObject) array.value()).getElements();
                     if (index.value() < 0 || index.value() >= arrayElements.length) {
-                        result = ExceptionUtils.newException(executionManager, executionContext, Types.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION, "Index: " + index.value() + ", Length: " + arrayElements.length);
+                        result = ExceptionUtils.newException(executionContext, Types.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION, "Index: " + index.value() + ", Length: " + arrayElements.length);
                     } else {
                         if (opcode == Opcodes.BASTORE) value = new StackInt((byte) ((StackInt) value).value());
                         else if (opcode == Opcodes.CASTORE) value = new StackInt((char) ((StackInt) value).value());
@@ -635,9 +636,9 @@ public class JVMMethodExecutor implements MethodExecutor {
                 case Opcodes.PUTSTATIC:
                     FieldInsnNode fieldInsnNode = (FieldInsnNode) currentInstruction;
                     ExecutorClass owner = executionManager.loadClass(executionContext, Type.getObjectType(fieldInsnNode.owner));
-                    ExecutorClass.ResolvedField fieldNode = owner.findField(executionManager, executionContext, fieldInsnNode.name, fieldInsnNode.desc);
+                    ExecutorClass.ResolvedField fieldNode = owner.findField(executionContext, fieldInsnNode.name, fieldInsnNode.desc);
                     if (fieldNode == null) {
-                        result = ExceptionUtils.newException(executionManager, executionContext, Types.NO_SUCH_FIELD_ERROR, fieldInsnNode.name);
+                        result = ExceptionUtils.newException(executionContext, Types.NO_SUCH_FIELD_ERROR, fieldInsnNode.name);
                     } else {
                         if (opcode == Opcodes.GETSTATIC) {
                             stack.push(fieldNode.get());
@@ -652,11 +653,11 @@ public class JVMMethodExecutor implements MethodExecutor {
                     fieldInsnNode = (FieldInsnNode) currentInstruction;
                     StackObject object = stack.pop(StackObject.class);
                     if (object.isNull()) {
-                        result = ExceptionUtils.newException(executionManager, executionContext, Types.NULL_POINTER_EXCEPTION, "Tried to access field of null object");
+                        result = ExceptionUtils.newException(executionContext, Types.NULL_POINTER_EXCEPTION, "Tried to access field of null object");
                     } else {
-                        fieldNode = object.value().getClazz().findField(executionManager, executionContext, fieldInsnNode.name, fieldInsnNode.desc);
+                        fieldNode = object.value().getClazz().findField(executionContext, fieldInsnNode.name, fieldInsnNode.desc);
                         if (fieldNode == null) {
-                            result = ExceptionUtils.newException(executionManager, executionContext, Types.NO_SUCH_FIELD_ERROR, fieldInsnNode.name);
+                            result = ExceptionUtils.newException(executionContext, Types.NO_SUCH_FIELD_ERROR, fieldInsnNode.name);
                         } else {
                             stack.push(object.value().getField(fieldNode.field()));
                         }
@@ -667,11 +668,11 @@ public class JVMMethodExecutor implements MethodExecutor {
                     value = stack.popSized();
                     object = stack.pop(StackObject.class);
                     if (object.isNull()) {
-                        result = ExceptionUtils.newException(executionManager, executionContext, Types.NULL_POINTER_EXCEPTION, "Tried to access field of null object");
+                        result = ExceptionUtils.newException(executionContext, Types.NULL_POINTER_EXCEPTION, "Tried to access field of null object");
                     } else {
-                        fieldNode = object.value().getClazz().findField(executionManager, executionContext, fieldInsnNode.name, fieldInsnNode.desc);
+                        fieldNode = object.value().getClazz().findField(executionContext, fieldInsnNode.name, fieldInsnNode.desc);
                         if (fieldNode == null) {
-                            result = ExceptionUtils.newException(executionManager, executionContext, Types.NO_SUCH_FIELD_ERROR, fieldInsnNode.name);
+                            result = ExceptionUtils.newException(executionContext, Types.NO_SUCH_FIELD_ERROR, fieldInsnNode.name);
                         } else {
                             verifyType(executionContext, value, ExecutorTypeUtils.typeToStackType(Type.getType(fieldNode.field().desc)));
                             object.value().setField(fieldNode.field(), value);
@@ -691,26 +692,26 @@ public class JVMMethodExecutor implements MethodExecutor {
                     }
                     StackObject ownerElement = stack.pop(StackObject.class);
                     if (ownerElement.isNull()) {
-                        result = ExceptionUtils.newException(executionManager, executionContext, Types.NULL_POINTER_EXCEPTION, "Tried to invoke method on null object");
+                        result = ExceptionUtils.newException(executionContext, Types.NULL_POINTER_EXCEPTION, "Tried to invoke method on null object");
                     } else {
                         ExecutorObject ownerObject = ownerElement.value();
                         //TODO: Interface checks
                         ExecutorClass.ResolvedMethod methodNode;
                         if (opcode == Opcodes.INVOKESPECIAL) {
                             ExecutorClass ownerClass = executionManager.loadClass(executionContext, Type.getObjectType(methodInsnNode.owner));
-                            methodNode = ownerClass.findMethod(executionManager, executionContext, methodInsnNode.name, methodInsnNode.desc);
+                            methodNode = ownerClass.findMethod(executionContext, methodInsnNode.name, methodInsnNode.desc);
                         } else {
-                            methodNode = ownerObject.getClazz().findMethod(executionManager, executionContext, methodInsnNode.name, methodInsnNode.desc);
+                            methodNode = ownerObject.getClazz().findMethod(executionContext, methodInsnNode.name, methodInsnNode.desc);
                         }
                         if (methodNode == null) {
                             if (ExecutionManager.DEBUG) {
                                 System.out.println("Cannot find method " + methodInsnNode.owner + "." + methodInsnNode.name + methodInsnNode.desc + " in " + ownerObject.getClazz().getClassNode().name);
                             }
-                            result = ExceptionUtils.newException(executionManager, executionContext, Types.NO_SUCH_METHOD_ERROR, methodInsnNode.name);
+                            result = ExceptionUtils.newException(executionContext, Types.NO_SUCH_METHOD_ERROR, methodInsnNode.name);
                         } else if (Modifiers.has(methodNode.method().access, Opcodes.ACC_STATIC)) {
-                            result = ExceptionUtils.newException(executionManager, executionContext, Types.INCOMPATIBLE_CLASS_CHANGE_ERROR, "Expecting non-static method " + methodInsnNode.owner + "." + methodInsnNode.name + methodInsnNode.desc);
+                            result = ExceptionUtils.newException(executionContext, Types.INCOMPATIBLE_CLASS_CHANGE_ERROR, "Expecting non-static method " + methodInsnNode.owner + "." + methodInsnNode.name + methodInsnNode.desc);
                         } else {
-                            ExecutionResult invokeResult = Executor.execute(executionManager, executionContext, methodNode.owner(), methodNode.method(), ownerObject, stackElements.toArray(new StackElement[0]));
+                            ExecutionResult invokeResult = Executor.execute(executionContext, methodNode.owner(), methodNode.method(), ownerObject, stackElements.toArray(new StackElement[0]));
                             if (invokeResult.hasReturnValue()) {
                                 verifyType(executionContext, invokeResult.getReturnValue(), ExecutorTypeUtils.typeToStackType(Types.returnType(methodNode.method())));
                                 stack.push(invokeResult.getReturnValue());
@@ -730,16 +731,16 @@ public class JVMMethodExecutor implements MethodExecutor {
                         stackElements.add(0, argumentType);
                     }
                     ExecutorClass ownerClass = executionManager.loadClass(executionContext, Type.getObjectType(methodInsnNode.owner));
-                    ExecutorClass.ResolvedMethod methodNode = ownerClass.findMethod(executionManager, executionContext, methodInsnNode.name, methodInsnNode.desc);
+                    ExecutorClass.ResolvedMethod methodNode = ownerClass.findMethod(executionContext, methodInsnNode.name, methodInsnNode.desc);
                     if (methodNode == null) {
                         if (ExecutionManager.DEBUG) {
                             System.out.println("Cannot find method " + methodInsnNode.owner + "." + methodInsnNode.name + methodInsnNode.desc + " in " + ownerClass.getClassNode().name);
                         }
-                        result = ExceptionUtils.newException(executionManager, executionContext, Types.NO_SUCH_METHOD_ERROR, methodInsnNode.name);
+                        result = ExceptionUtils.newException(executionContext, Types.NO_SUCH_METHOD_ERROR, methodInsnNode.name);
                     } else if (!Modifiers.has(methodNode.method().access, Opcodes.ACC_STATIC)) {
-                        result = ExceptionUtils.newException(executionManager, executionContext, Types.INCOMPATIBLE_CLASS_CHANGE_ERROR, "Expecting static method " + methodInsnNode.owner + "." + methodInsnNode.name + methodInsnNode.desc);
+                        result = ExceptionUtils.newException(executionContext, Types.INCOMPATIBLE_CLASS_CHANGE_ERROR, "Expecting static method " + methodInsnNode.owner + "." + methodInsnNode.name + methodInsnNode.desc);
                     } else {
-                        ExecutionResult invokeResult = Executor.execute(executionManager, executionContext, methodNode.owner(), methodNode.method(), null, stackElements.toArray(new StackElement[0]));
+                        ExecutionResult invokeResult = Executor.execute(executionContext, methodNode.owner(), methodNode.method(), null, stackElements.toArray(new StackElement[0]));
                         if (invokeResult.hasReturnValue()) {
                             verifyType(executionContext, invokeResult.getReturnValue(), ExecutorTypeUtils.typeToStackType(Types.returnType(methodNode.method())));
                             stack.push(invokeResult.getReturnValue());
@@ -760,17 +761,15 @@ public class JVMMethodExecutor implements MethodExecutor {
                     IntInsnNode intInsnNode = (IntInsnNode) currentInstruction;
                     int length = stack.pop(StackInt.class).value();
                     switch (intInsnNode.operand) {
-                        //@formatter:off
-                        case Opcodes.T_BOOLEAN -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(boolean[].class), length, () -> StackInt.ZERO));
-                        case Opcodes.T_BYTE -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(byte[].class), length, () -> StackInt.ZERO));
-                        case Opcodes.T_CHAR -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(char[].class), length, () -> StackInt.ZERO));
-                        case Opcodes.T_SHORT -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(short[].class), length, () -> StackInt.ZERO));
-                        case Opcodes.T_INT -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(int[].class), length, () -> StackInt.ZERO));
-                        case Opcodes.T_LONG -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(long[].class), length, () -> StackLong.ZERO));
-                        case Opcodes.T_FLOAT -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(float[].class), length, () -> StackFloat.ZERO));
-                        case Opcodes.T_DOUBLE -> stack.push(ExecutorTypeUtils.newArray(executionManager, executionContext, Type.getType(double[].class), length, () -> StackDouble.ZERO));
+                        case Opcodes.T_BOOLEAN -> stack.push(ExecutorTypeUtils.newArray(executionContext, Type.getType(boolean[].class), length, () -> StackInt.ZERO));
+                        case Opcodes.T_BYTE -> stack.push(ExecutorTypeUtils.newArray(executionContext, Type.getType(byte[].class), length, () -> StackInt.ZERO));
+                        case Opcodes.T_CHAR -> stack.push(ExecutorTypeUtils.newArray(executionContext, Type.getType(char[].class), length, () -> StackInt.ZERO));
+                        case Opcodes.T_SHORT -> stack.push(ExecutorTypeUtils.newArray(executionContext, Type.getType(short[].class), length, () -> StackInt.ZERO));
+                        case Opcodes.T_INT -> stack.push(ExecutorTypeUtils.newArray(executionContext, Type.getType(int[].class), length, () -> StackInt.ZERO));
+                        case Opcodes.T_LONG -> stack.push(ExecutorTypeUtils.newArray(executionContext, Type.getType(long[].class), length, () -> StackLong.ZERO));
+                        case Opcodes.T_FLOAT -> stack.push(ExecutorTypeUtils.newArray(executionContext, Type.getType(float[].class), length, () -> StackFloat.ZERO));
+                        case Opcodes.T_DOUBLE -> stack.push(ExecutorTypeUtils.newArray(executionContext, Type.getType(double[].class), length, () -> StackDouble.ZERO));
                         default -> throw new ExecutorException(executionContext, "Unknown array type: " + intInsnNode.operand);
-                        //@formatter:on
                     }
                     break;
                 case Opcodes.ANEWARRAY:
@@ -789,8 +788,8 @@ public class JVMMethodExecutor implements MethodExecutor {
                 case Opcodes.ATHROW:
                     object = stack.pop(StackObject.class);
                     if (object.isNull()) {
-                        result = ExceptionUtils.newException(executionManager, executionContext, Types.NULL_POINTER_EXCEPTION);
-                    } else if (!object.value().getClazz().isInstance(executionManager, executionContext, Types.THROWABLE)) {
+                        result = ExceptionUtils.newException(executionContext, Types.NULL_POINTER_EXCEPTION);
+                    } else if (!object.value().getClazz().isInstance(executionContext, Types.THROWABLE)) {
                         throw new ExecutorException(executionContext, "Expected throwable but got " + object.value().getClazz().getClassNode().name);
                     } else {
                         result = ExecutionResult.exception(object.value());
@@ -799,8 +798,8 @@ public class JVMMethodExecutor implements MethodExecutor {
                 case Opcodes.CHECKCAST:
                     typeInsnNode = (TypeInsnNode) currentInstruction;
                     object = stack.pop(StackObject.class);
-                    if (object != StackObject.NULL && !object.value().getClazz().isInstance(executionManager, executionContext, Type.getObjectType(typeInsnNode.desc))) {
-                        result = ExceptionUtils.newException(executionManager, executionContext, Types.CLASS_CAST_EXCEPTION, "Cannot cast " + object.value().getClazz().getClassNode().name + " to " + typeInsnNode.desc);
+                    if (object != StackObject.NULL && !object.value().getClazz().isInstance(executionContext, Type.getObjectType(typeInsnNode.desc))) {
+                        result = ExceptionUtils.newException(executionContext, Types.CLASS_CAST_EXCEPTION, "Cannot cast " + object.value().getClazz().getClassNode().name + " to " + typeInsnNode.desc);
                     } else {
                         stack.push(object.withType(Type.getObjectType(typeInsnNode.desc)));
                     }
@@ -811,7 +810,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                     if (object.isNull()) {
                         stack.push(StackInt.ZERO);
                     } else {
-                        boolean isInstance = object.value().getClazz().isInstance(executionManager, executionContext, Type.getObjectType(typeInsnNode.desc));
+                        boolean isInstance = object.value().getClazz().isInstance(executionContext, Type.getObjectType(typeInsnNode.desc));
                         stack.push(isInstance ? StackInt.ONE : StackInt.ZERO);
                     }
                     break;
@@ -832,7 +831,7 @@ public class JVMMethodExecutor implements MethodExecutor {
                     for (int i = multiANewArrayInsnNode.dims - 1; i >= 1; i--) {
                         int dimensions = stack.pop(StackInt.class).value();
                         if (dimensions < 0) {
-                            result = ExceptionUtils.newException(executionManager, executionContext, Types.NEGATIVE_ARRAY_SIZE_EXCEPTION, "Dimension: " + dimensions);
+                            result = ExceptionUtils.newException(executionContext, Types.NEGATIVE_ARRAY_SIZE_EXCEPTION, "Dimension: " + dimensions);
                             break;
                         }
                         ExecutorClass arrayClass = executionManager.loadClass(executionContext, Types.asArray(elementType, i));
@@ -874,7 +873,7 @@ public class JVMMethodExecutor implements MethodExecutor {
 
             if (result != null) {
                 if (result.hasException()) {
-                    TryCatchBlockNode matchingTryCatchBlock = getMatchingTryCatchBlock(executionManager, executionContext, currentMethod, currentInstruction, result.getException().getClazz());
+                    TryCatchBlockNode matchingTryCatchBlock = getMatchingTryCatchBlock(executionContext, currentMethod, currentInstruction, result.getException().getClazz());
                     if (matchingTryCatchBlock == null) {
                         //If no try catch block was found, throw the exception to the caller
                         break;
@@ -916,7 +915,7 @@ public class JVMMethodExecutor implements MethodExecutor {
     }
 
     @Nullable
-    private static TryCatchBlockNode getMatchingTryCatchBlock(final ExecutionManager executionManager, final ExecutionContext executionContext, final MethodNode method, final AbstractInsnNode currentInstruction, final ExecutorClass exceptionClass) {
+    private static TryCatchBlockNode getMatchingTryCatchBlock(final ExecutionContext executionContext, final MethodNode method, final AbstractInsnNode currentInstruction, final ExecutorClass exceptionClass) {
         int index = method.instructions.indexOf(currentInstruction);
         for (TryCatchBlockNode tryCatchBlock : method.tryCatchBlocks) {
             int start = method.instructions.indexOf(tryCatchBlock.start);
@@ -925,8 +924,8 @@ public class JVMMethodExecutor implements MethodExecutor {
                 if (tryCatchBlock.type == null) {
                     return tryCatchBlock;
                 } else {
-                    ExecutorClass catchClass = executionManager.loadClass(executionContext, Type.getObjectType(tryCatchBlock.type));
-                    if (exceptionClass.isInstance(executionManager, executionContext, catchClass.getType())) {
+                    ExecutorClass catchClass = executionContext.getExecutionManager().loadClass(executionContext, Type.getObjectType(tryCatchBlock.type));
+                    if (exceptionClass.isInstance(executionContext, catchClass.getType())) {
                         return tryCatchBlock;
                     }
                 }

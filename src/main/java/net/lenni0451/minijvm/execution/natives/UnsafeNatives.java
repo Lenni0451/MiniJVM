@@ -26,10 +26,10 @@ public class UnsafeNatives implements Consumer<ExecutionManager> {
     @Override
     public void accept(ExecutionManager manager) {
         manager.registerMethodExecutor("jdk/internal/misc/Unsafe.registerNatives()V", MethodExecutor.NOOP_VOID);
-        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.arrayBaseOffset0(Ljava/lang/Class;)I", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
+        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.arrayBaseOffset0(Ljava/lang/Class;)I", (executionContext, currentClass, currentMethod, instance, arguments) -> {
             return returnValue(new StackInt(16));
         });
-        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.arrayIndexScale0(Ljava/lang/Class;)I", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
+        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.arrayIndexScale0(Ljava/lang/Class;)I", (executionContext, currentClass, currentMethod, instance, arguments) -> {
             ClassObject executorClass = (ClassObject) ((StackObject) arguments[0]).value();
             Type type = Type.getType(executorClass.getClassType().getClassNode().name).getElementType();
             return returnValue(new StackInt(switch (type.getSort()) {
@@ -44,17 +44,17 @@ public class UnsafeNatives implements Consumer<ExecutionManager> {
                 default -> 4; //Address size
             }));
         });
-        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.objectFieldOffset1(Ljava/lang/Class;Ljava/lang/String;)J", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
+        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.objectFieldOffset1(Ljava/lang/Class;Ljava/lang/String;)J", (executionContext, currentClass, currentMethod, instance, arguments) -> {
             if (arguments[0].isNull()) {
-                return ExceptionUtils.newException(executionManager, executionContext, Types.NULL_POINTER_EXCEPTION, "class");
+                return ExceptionUtils.newException(executionContext, Types.NULL_POINTER_EXCEPTION, "class");
             } else if (arguments[1].isNull()) {
-                return ExceptionUtils.newException(executionManager, executionContext, Types.NULL_POINTER_EXCEPTION, "name");
+                return ExceptionUtils.newException(executionContext, Types.NULL_POINTER_EXCEPTION, "name");
             }
             ExecutorClass executorClass = ((ClassObject) ((StackObject) arguments[0]).value()).getClassType();
-            String fieldName = ExecutorTypeUtils.fromExecutorString(executionManager, executionContext, ((StackObject) arguments[1]).value());
+            String fieldName = ExecutorTypeUtils.fromExecutorString(executionContext, ((StackObject) arguments[1]).value());
             FieldNode fieldNode = UnsafeUtils.getFieldByName(executorClass, fieldName);
             if (fieldNode == null) {
-                return ExceptionUtils.newException(executionManager, executionContext, Types.INTERNAL_ERROR, fieldName);
+                return ExceptionUtils.newException(executionContext, Types.INTERNAL_ERROR, fieldName);
             }
             return returnValue(new StackLong(UnsafeUtils.getFieldHashCode(fieldNode)));
         });

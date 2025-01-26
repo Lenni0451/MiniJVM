@@ -15,13 +15,13 @@ public class Benchmark {
 
     public static void main(String[] args) {
         ExecutionManager manager = new ExecutionManager(new LoaderClassProvider());
-        ExecutionContext context = new ExecutionContext();
+        ExecutionContext context = manager.newContext();
 
         final double d = 1 / 0.75;
         ExecutorClass test4Class = manager.loadClass(context, Type.getType(Benchmark.class));
-        ExecutorClass.ResolvedMethod doitMethod = test4Class.findMethod(manager, context, "run", "()J");
+        ExecutorClass.ResolvedMethod doitMethod = test4Class.findMethod(context, "run", "()J");
         long start = System.nanoTime();
-        ExecutionResult result = Executor.execute(manager, context, test4Class, doitMethod.method(), null, new StackDouble(d));
+        ExecutionResult result = Executor.execute(context, test4Class, doitMethod.method(), null, new StackDouble(d));
         System.out.println(result);
         System.out.println("MiniJVM: " + new DecimalFormat().format(System.nanoTime() - start));
 

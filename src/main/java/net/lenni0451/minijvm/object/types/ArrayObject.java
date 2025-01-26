@@ -1,6 +1,5 @@
 package net.lenni0451.minijvm.object.types;
 
-import net.lenni0451.minijvm.ExecutionManager;
 import net.lenni0451.minijvm.context.ExecutionContext;
 import net.lenni0451.minijvm.object.ExecutorClass;
 import net.lenni0451.minijvm.object.ExecutorObject;
@@ -10,8 +9,8 @@ public class ArrayObject extends ExecutorObject {
 
     private final StackElement[] elements;
 
-    public ArrayObject(final ExecutionManager executionManager, final ExecutionContext executionContext, final ExecutorClass clazz, final StackElement[] elements) {
-        super(executionManager, executionContext, clazz);
+    public ArrayObject(final ExecutionContext executionContext, final ExecutorClass clazz, final StackElement[] elements) {
+        super(executionContext, clazz);
         this.elements = elements;
     }
 

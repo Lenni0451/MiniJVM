@@ -11,7 +11,7 @@ public class ThrowableNatives implements Consumer<ExecutionManager> {
 
     @Override
     public void accept(ExecutionManager manager) {
-        manager.registerMethodExecutor("java/lang/Throwable.fillInStackTrace(I)Ljava/lang/Throwable;", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
+        manager.registerMethodExecutor("java/lang/Throwable.fillInStackTrace(I)Ljava/lang/Throwable;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
             //TODO: Implement fillInStackTrace
             return returnValue(new StackObject(instance));
         });

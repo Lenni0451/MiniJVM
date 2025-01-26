@@ -19,7 +19,8 @@ import static net.lenni0451.minijvm.utils.Types.*;
 
 public class ExecutorTypeUtils {
 
-    public static StackElement parse(final ExecutionManager executionManager, final ExecutionContext executionContext, final Object jvmObject) {
+    public static StackElement parse(final ExecutionContext executionContext, final Object jvmObject) {
+        ExecutionManager executionManager = executionContext.getExecutionManager();
         if (jvmObject == null) return StackObject.NULL;
         if (jvmObject instanceof Integer i) {
             return new StackInt(i);
@@ -34,7 +35,7 @@ public class ExecutorTypeUtils {
             ExecutorObject stringObject = executionManager.instantiate(executionContext, stringClass);
             if (s.isEmpty()) {
                 //TODO: Find out what to actually do with empty strings
-                ExecutorClass.ResolvedField valueField = stringClass.findField(executionManager, executionContext, "value", "[B");
+                ExecutorClass.ResolvedField valueField = stringClass.findField(executionContext, "value", "[B");
                 stringObject.setField(valueField.field(), new StackObject(executionManager.instantiateArray(executionContext, executionManager.loadClass(executionContext, BYTE_ARRAY), new StackElement[0])));
             } else {
                 char[] value = s.toCharArray();
@@ -42,7 +43,7 @@ public class ExecutorTypeUtils {
                 for (int i = 0; i < value.length; i++) valueArray[i] = new StackInt(value[i]);
                 ExecutorClass arrayClass = executionManager.loadClass(executionContext, CHAR_ARRAY);
                 ExecutorObject arrayObject = executionManager.instantiateArray(executionContext, arrayClass, valueArray);
-                Executor.execute(executionManager, executionContext, stringClass, ASMUtils.getMethod(stringClass.getClassNode(), "<init>", "([C)V"), stringObject, new StackObject(arrayObject));
+                Executor.execute(executionContext, stringClass, ASMUtils.getMethod(stringClass.getClassNode(), "<init>", "([C)V"), stringObject, new StackObject(arrayObject));
             }
             return new StackObject(stringObject);
         } else if (jvmObject instanceof Type t) {
@@ -87,12 +88,12 @@ public class ExecutorTypeUtils {
         }
     }
 
-    public static String fromExecutorString(final ExecutionManager executionManager, final ExecutionContext executionContext, final ExecutorObject executorObject) {
+    public static String fromExecutorString(final ExecutionContext executionContext, final ExecutorObject executorObject) {
         if (!executorObject.getClazz().getClassNode().name.equals("java/lang/String")) {
             throw new IllegalArgumentException("The given executor object is not a string object");
         }
-        ExecutorClass.ResolvedMethod toCharArray = executorObject.getClazz().findMethod(executionManager, executionContext, "toCharArray", "()[C");
-        StackObject valueArray = (StackObject) Executor.execute(executionManager, executionContext, toCharArray.owner(), toCharArray.method(), executorObject).getReturnValue();
+        ExecutorClass.ResolvedMethod toCharArray = executorObject.getClazz().findMethod(executionContext, "toCharArray", "()[C");
+        StackObject valueArray = (StackObject) Executor.execute(executionContext, toCharArray.owner(), toCharArray.method(), executorObject).getReturnValue();
         StringBuilder builder = new StringBuilder();
         for (StackElement element : ((ArrayObject) valueArray.value()).getElements()) {
             builder.append((char) ((StackInt) element).value());
@@ -100,17 +101,17 @@ public class ExecutorTypeUtils {
         return builder.toString();
     }
 
-    public static StackObject newArray(final ExecutionManager executionManager, final ExecutionContext executionContext, final Type type, final int length, @Nullable final Supplier<StackElement> supplier) {
+    public static StackObject newArray(final ExecutionContext executionContext, final Type type, final int length, @Nullable final Supplier<StackElement> supplier) {
         StackElement[] elements = new StackElement[length];
         if (supplier != null) {
             for (int i = 0; i < length; i++) elements[i] = supplier.get();
         }
-        return newArray(executionManager, executionContext, type, elements);
+        return newArray(executionContext, type, elements);
     }
 
-    public static StackObject newArray(final ExecutionManager executionManager, final ExecutionContext executionContext, final Type type, final StackElement[] elements) {
-        ExecutorClass arrayClass = executionManager.loadClass(executionContext, type);
-        ExecutorObject arrayObject = executionManager.instantiateArray(executionContext, arrayClass, elements);
+    public static StackObject newArray(final ExecutionContext executionContext, final Type type, final StackElement[] elements) {
+        ExecutorClass arrayClass = executionContext.getExecutionManager().loadClass(executionContext, type);
+        ExecutorObject arrayObject = executionContext.getExecutionManager().instantiateArray(executionContext, arrayClass, elements);
         return new StackObject(arrayObject);
     }
 

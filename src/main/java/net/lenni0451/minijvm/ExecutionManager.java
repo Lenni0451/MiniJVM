@@ -64,6 +64,10 @@ public class ExecutionManager {
         this.accept(new ClassLoaderNatives());
     }
 
+    public ExecutionContext newContext() {
+        return new ExecutionContext(this);
+    }
+
     public void accept(final Consumer<ExecutionManager> consumer) {
         consumer.accept(this);
     }
@@ -104,7 +108,7 @@ public class ExecutionManager {
         } else {
             throw new ExecutorException(executionContext, "Unsupported type: " + type.getSort() + " (" + type + ")");
         }
-        ExecutorClass executorClass = new ExecutorClass(this, executionContext, type, classNode);
+        ExecutorClass executorClass = new ExecutorClass(executionContext, type, classNode);
         this.loadedClasses.put(type, executorClass); //Add the class here to prevent infinite loops
         return executorClass;
     }
@@ -113,9 +117,9 @@ public class ExecutionManager {
         ExecutorObject instantiatedClass = this.classInstances.get(executorClass);
         if (instantiatedClass != null) return instantiatedClass;
 
-        ExecutorObject classInstance = new ClassObject(this, executionContext, executorClass);
+        ExecutorObject classInstance = new ClassObject(executionContext, executorClass);
         { //Component type
-            ExecutorClass.ResolvedField componentTypeField = classInstance.getClazz().findField(this, executionContext, "componentType", "Ljava/lang/Class;");
+            ExecutorClass.ResolvedField componentTypeField = classInstance.getClazz().findField(executionContext, "componentType", "Ljava/lang/Class;");
             if (componentTypeField != null) {
                 if (executorClass.getType().getSort() == Type.ARRAY) {
                     ExecutorClass componentTypeClass = this.loadClass(executionContext, Types.arrayType(executorClass.getType()));
@@ -126,9 +130,9 @@ public class ExecutionManager {
             }
         }
         { //Name
-            ExecutorClass.ResolvedField nameField = classInstance.getClazz().findField(this, executionContext, "name", "Ljava/lang/String;");
+            ExecutorClass.ResolvedField nameField = classInstance.getClazz().findField(executionContext, "name", "Ljava/lang/String;");
             if (nameField != null) {
-                classInstance.setField(nameField.field(), ExecutorTypeUtils.parse(this, executionContext, executorClass.getClassNode().name));
+                classInstance.setField(nameField.field(), ExecutorTypeUtils.parse(executionContext, executorClass.getClassNode().name));
             }
         }
         this.classInstances.put(executorClass, classInstance);
@@ -136,7 +140,7 @@ public class ExecutionManager {
     }
 
     public ExecutorObject instantiate(final ExecutionContext executionContext, final ExecutorClass executorClass) {
-        return new ExecutorObject(this, executionContext, executorClass);
+        return new ExecutorObject(executionContext, executorClass);
     }
 
     public ExecutorObject instantiateArray(final ExecutionContext executionContext, final ExecutorClass executorClass, final int length) {
@@ -165,7 +169,7 @@ public class ExecutionManager {
 
         StackElement[] elements = new StackElement[length];
         for (int i = 0; i < length; i++) elements[i] = elementSupplier.apply(i);
-        return new ArrayObject(this, executionContext, executorClass, elements);
+        return new ArrayObject(executionContext, executorClass, elements);
     }
 
 }

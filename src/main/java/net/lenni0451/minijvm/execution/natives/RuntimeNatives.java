@@ -11,7 +11,7 @@ public class RuntimeNatives implements Consumer<ExecutionManager> {
 
     @Override
     public void accept(ExecutionManager manager) {
-        manager.registerMethodExecutor("java/lang/Runtime.availableProcessors()I", (executionManager, executionContext, currentClass, currentMethod, instance, arguments) -> {
+        manager.registerMethodExecutor("java/lang/Runtime.availableProcessors()I", (executionContext, currentClass, currentMethod, instance, arguments) -> {
             return returnValue(new StackInt(Runtime.getRuntime().availableProcessors()));
         });
     }
