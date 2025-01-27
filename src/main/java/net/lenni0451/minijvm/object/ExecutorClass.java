@@ -4,6 +4,8 @@ import lombok.SneakyThrows;
 import net.lenni0451.commons.asm.ASMUtils;
 import net.lenni0451.commons.asm.Modifiers;
 import net.lenni0451.minijvm.ExecutionContext;
+import net.lenni0451.minijvm.exception.ExecutorException;
+import net.lenni0451.minijvm.execution.ExecutionResult;
 import net.lenni0451.minijvm.execution.Executor;
 import net.lenni0451.minijvm.stack.StackElement;
 import net.lenni0451.minijvm.utils.ExecutorTypeUtils;
@@ -78,7 +80,8 @@ public class ExecutorClass {
         if (!this.initialized.compareAndSet(false, true)) return;
         for (MethodNode method : this.classNode.methods) {
             if (Modifiers.has(method.access, Opcodes.ACC_STATIC) && method.name.equals("<clinit>")) {
-                Executor.execute(executionContext, this, method, null);
+                ExecutionResult result = Executor.execute(executionContext, this, method, null);
+                if (result.hasException()) throw new ExecutorException(executionContext, "Could not execute static initializer of " + this.classNode.name, result.getException());
             }
         }
         for (ExecutorClass superClass : this.superClasses.values()) superClass.invokeStaticInit(executionContext);

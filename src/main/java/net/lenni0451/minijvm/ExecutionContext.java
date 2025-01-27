@@ -5,7 +5,6 @@ import org.objectweb.asm.tree.MethodNode;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * This class is used to manage the current state of the executor.<br>
@@ -13,19 +12,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ExecutionContext {
 
-    private static final AtomicInteger CONTEXT_ID = new AtomicInteger(0);
-
-    private final int id = CONTEXT_ID.getAndIncrement();
     private final ExecutionManager executionManager;
     private final List<StackFrame> stackFrames;
 
     public ExecutionContext(final ExecutionManager executionManager) {
         this.executionManager = executionManager;
         this.stackFrames = new ArrayList<>();
-    }
-
-    public int getId() {
-        return this.id;
     }
 
     public ExecutionManager getExecutionManager() {

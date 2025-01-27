@@ -11,6 +11,8 @@ import net.lenni0451.minijvm.stack.StackElement;
 import net.lenni0451.minijvm.stack.StackObject;
 import org.objectweb.asm.Type;
 
+import javax.annotation.Nullable;
+
 public class ExceptionUtils {
 
     public static ExecutionResult newException(final ExecutionContext executionContext, final Type exceptionType) {
@@ -39,11 +41,14 @@ public class ExceptionUtils {
         return ExecutionResult.exception(exceptionObject);
     }
 
+    @Nullable
     public static String getMessage(final ExecutionContext executionContext, final ExecutorObject exceptionObject) {
         ExecutorClass clazz = exceptionObject.getClazz();
         ExecutorClass.ResolvedMethod getMessage = clazz.findMethod(executionContext, "getMessage", "()Ljava/lang/String;");
         ExecutionResult result = Executor.execute(executionContext, clazz, getMessage.method(), exceptionObject);
         if (result.hasException()) throw new ExecutorException(executionContext, "Could not get message from exception: " + clazz.getType());
+        ExecutorObject messageObject = ((StackObject) result.getReturnValue()).value();
+        if (messageObject == null) return null;
         return ExecutorTypeUtils.fromExecutorString(executionContext, ((StackObject) result.getReturnValue()).value());
     }
 

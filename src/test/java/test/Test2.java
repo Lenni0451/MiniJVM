@@ -1,8 +1,8 @@
 package test;
 
 import net.lenni0451.commons.asm.provider.LoaderClassProvider;
+import net.lenni0451.minijvm.ExecutionContext;
 import net.lenni0451.minijvm.ExecutionManager;
-import net.lenni0451.minijvm.context.ExecutionContext;
 import net.lenni0451.minijvm.execution.ExecutionResult;
 import net.lenni0451.minijvm.execution.Executor;
 import net.lenni0451.minijvm.object.ExecutorClass;

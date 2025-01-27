@@ -12,6 +12,7 @@ import net.lenni0451.minijvm.object.ExecutorObject;
 import net.lenni0451.minijvm.object.types.ArrayObject;
 import net.lenni0451.minijvm.object.types.ClassObject;
 import net.lenni0451.minijvm.stack.*;
+import net.lenni0451.minijvm.unsafe.MemoryStorage;
 import net.lenni0451.minijvm.utils.ExecutorTypeUtils;
 import net.lenni0451.minijvm.utils.Types;
 import org.objectweb.asm.Opcodes;
@@ -35,6 +36,7 @@ public class ExecutionManager {
     private final Map<Type, ExecutorClass> loadedClasses;
     private final Map<ExecutorClass, ExecutorObject> classInstances;
     private final Map<String, MethodExecutor> methodExecutors;
+    private final MemoryStorage memoryStorage;
 
     public ExecutionManager(final ClassProvider classProvider) {
         this(new ClassPool(classProvider));
@@ -45,6 +47,7 @@ public class ExecutionManager {
         this.loadedClasses = new HashMap<>();
         this.classInstances = new HashMap<>();
         this.methodExecutors = new HashMap<>();
+        this.memoryStorage = new MemoryStorage();
 
         this.registerMethodExecutor(null, new JVMMethodExecutor());
         this.accept(new ClassNatives());
@@ -66,14 +69,13 @@ public class ExecutionManager {
         this.accept(new FileOutputStreamNatives());
         this.accept(new ScopedMemoryAccessNatives());
         this.accept(new SignalNatives());
+        this.accept(new AccessControllerNatives());
     }
 
-    /**
-     * Create a new execution context.<br>
-     * It could be compared to a new thread in a normal JVM.
-     *
-     * @return The new execution context
-     */
+    public MemoryStorage getMemoryStorage() {
+        return this.memoryStorage;
+    }
+
     public ExecutionContext newContext() {
         return new ExecutionContext(this);
     }

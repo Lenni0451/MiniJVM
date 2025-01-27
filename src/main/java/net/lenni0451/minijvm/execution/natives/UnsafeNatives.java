@@ -18,6 +18,7 @@ import net.lenni0451.minijvm.utils.UnsafeUtils;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldNode;
 
+import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -57,36 +58,37 @@ public class UnsafeNatives implements Consumer<ExecutionManager> {
             return returnValue(new StackLong(UnsafeUtils.getFieldHashCode(fieldNode)));
         });
         manager.registerMethodExecutor("jdk/internal/misc/Unsafe.fullFence()V", MethodExecutor.NOOP_VOID);
-        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.compareAndSetInt(Ljava/lang/Object;JII)Z", this.compareAndSet(e -> ((StackInt) e).value(), StackInt::new, Integer::equals));
-        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.compareAndSetLong(Ljava/lang/Object;JJJ)Z", this.compareAndSet(e -> ((StackLong) e).value(), StackLong::new, Long::equals));
-        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.compareAndSetReference(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z", this.compareAndSet(e -> ((StackObject) e).value(), StackObject::new, (o1, o2) -> o1 == o2));
-        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.getReferenceVolatile(Ljava/lang/Object;J)Ljava/lang/Object;", (executionContext, currentClass, currentMethod, instance, arguments) -> {
-            ExecutorObject object = ((StackObject) arguments[0]).value();
-            long offset = ((StackLong) arguments[1]).value();
-            if (object instanceof ArrayObject array) {
-                offset -= ARRAY_BASE_OFFSET;
-                offset /= UnsafeUtils.arrayIndexScale(Types.arrayType(array.getClazz().getType()));
-                if (offset < 0 || offset >= array.getElements().length) {
-                    throw new ExecutorException(executionContext, "Tried reading from invalid array index: " + offset + "/" + array.getElements().length);
-                }
-                return returnValue(array.getElements()[(int) offset]);
-            } else {
-                FieldNode field = UnsafeUtils.getFieldByHashCode(object.getClazz(), offset);
-                if (field == null) {
-                    throw new ExecutorException(executionContext, "Tried reading from invalid field offset: " + offset);
-                }
-                return returnValue(object.getField(field));
-            }
-        });
+
+        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.compareAndSetInt(Ljava/lang/Object;JII)Z",
+                this.compareAndSet(e -> ((StackInt) e).value(), StackInt::new, Integer::equals, manager.getMemoryStorage()::getInt, manager.getMemoryStorage()::putInt));
+        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.compareAndSetLong(Ljava/lang/Object;JJJ)Z",
+                this.compareAndSet(e -> ((StackLong) e).value(), StackLong::new, Long::equals, manager.getMemoryStorage()::getLong, manager.getMemoryStorage()::putLong));
+        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.compareAndSetReference(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z",
+                this.compareAndSet(e -> ((StackObject) e).value(), StackObject::new, (o1, o2) -> o1 == o2, offset -> null, (offset, value) -> {
+                    throw new IllegalStateException("Cannot write objects to memory");
+                }));
+
+        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.getLongVolatile(Ljava/lang/Object;J)J",
+                this.getVolatile(offset -> new StackLong(manager.getMemoryStorage().getLong(offset))));
+        manager.registerMethodExecutor("jdk/internal/misc/Unsafe.getReferenceVolatile(Ljava/lang/Object;J)Ljava/lang/Object;",
+                this.getVolatile(offset -> null));
     }
 
-    private <T> MethodExecutor compareAndSet(final Function<StackElement, T> getter, final Function<T, StackElement> constructor, final BiPredicate<T, T> comparator) {
+    private <T> MethodExecutor compareAndSet(final Function<StackElement, T> getter, final Function<T, StackElement> constructor, final BiPredicate<T, T> comparator, final Function<Long, T> memoryGetter, final BiConsumer<Long, T> memorySetter) {
         return (executionContext, currentClass, currentMethod, instance, arguments) -> {
             ExecutorObject object = ((StackObject) arguments[0]).value();
             long offset = ((StackLong) arguments[1]).value();
             T expected = getter.apply(arguments[2]);
             T update = getter.apply(arguments[3]);
-            if (object instanceof ArrayObject array) {
+            if (object == null) {
+                T current = memoryGetter.apply(offset);
+                if (comparator.test(current, expected)) {
+                    memorySetter.accept(offset, update);
+                    return returnValue(StackInt.ONE);
+                } else {
+                    return returnValue(StackInt.ZERO);
+                }
+            } else if (object instanceof ArrayObject array) {
                 offset -= ARRAY_BASE_OFFSET;
                 offset /= UnsafeUtils.arrayIndexScale(Types.arrayType(array.getClazz().getType()));
                 if (offset < 0 || offset >= array.getElements().length) {
@@ -113,6 +115,31 @@ public class UnsafeNatives implements Consumer<ExecutionManager> {
                 } else {
                     return returnValue(StackInt.ZERO);
                 }
+            }
+        };
+    }
+
+    private MethodExecutor getVolatile(final Function<Long, StackElement> memoryGetter) {
+        return (executionContext, currentClass, currentMethod, instance, arguments) -> {
+            ExecutorObject object = ((StackObject) arguments[0]).value();
+            long offset = ((StackLong) arguments[1]).value();
+            if (object == null) {
+                StackElement memoryValue = memoryGetter.apply(offset);
+                if (memoryValue != null) return returnValue(memoryValue);
+                throw new ExecutorException(executionContext, "Tried reading from invalid memory offset: " + offset);
+            } else if (object instanceof ArrayObject array) {
+                offset -= ARRAY_BASE_OFFSET;
+                offset /= UnsafeUtils.arrayIndexScale(Types.arrayType(array.getClazz().getType()));
+                if (offset < 0 || offset >= array.getElements().length) {
+                    throw new ExecutorException(executionContext, "Tried reading from invalid array index: " + offset + "/" + array.getElements().length);
+                }
+                return returnValue(array.getElements()[(int) offset]);
+            } else {
+                FieldNode field = UnsafeUtils.getFieldByHashCode(object.getClazz(), offset);
+                if (field == null) {
+                    throw new ExecutorException(executionContext, "Tried reading from invalid field offset: " + offset);
+                }
+                return returnValue(object.getField(field));
             }
         };
     }
