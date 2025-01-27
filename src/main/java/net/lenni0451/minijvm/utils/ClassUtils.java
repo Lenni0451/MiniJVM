@@ -34,10 +34,10 @@ public class ClassUtils {
             "D", "double"
     );
 
-    public static ExecutorClass getClassFromClassInstance(final ExecutionContext executionContext, final StackObject stackObject) {
+    public static ExecutorClass getClassFromClassInstance(final ExecutionContext context, final StackObject stackObject) {
         ExecutorObject executorObject = stackObject.value();
         if (!(executorObject instanceof ClassObject classObject)) {
-            throw new ExecutorException(executionContext, "Expected a ClassObject but got " + executorObject.getClass().getSimpleName() + " - " + executorObject);
+            throw new ExecutorException(context, "Expected a ClassObject but got " + executorObject.getClass().getSimpleName() + " - " + executorObject);
         }
         return classObject.getClassType();
     }

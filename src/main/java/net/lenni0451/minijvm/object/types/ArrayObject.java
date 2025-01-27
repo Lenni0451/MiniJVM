@@ -9,8 +9,8 @@ public class ArrayObject extends ExecutorObject {
 
     private final StackElement[] elements;
 
-    public ArrayObject(final ExecutionContext executionContext, final ExecutorClass clazz, final StackElement[] elements) {
-        super(executionContext, clazz);
+    public ArrayObject(final ExecutionContext context, final ExecutorClass clazz, final StackElement[] elements) {
+        super(context, clazz);
         this.elements = elements;
     }
 

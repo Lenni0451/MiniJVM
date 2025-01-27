@@ -16,18 +16,18 @@ public class ExecutorObject {
     private final ExecutorClass clazz;
     private final Map<FieldNode, StackElement> fields;
 
-    public ExecutorObject(final ExecutionContext executionContext, final ExecutorClass clazz) {
+    public ExecutorObject(final ExecutionContext context, final ExecutorClass clazz) {
         this.clazz = clazz;
         this.fields = new HashMap<>();
 
-        this.initFields(executionContext);
+        this.initFields(context);
     }
 
-    private void initFields(final ExecutionContext executionContext) {
+    private void initFields(final ExecutionContext context) {
         for (ExecutorClass executorClass : this.clazz.superClasses.values()) {
             for (FieldNode field : executorClass.getClassNode().fields) {
                 if (Modifiers.has(field.access, Opcodes.ACC_STATIC)) continue;
-                StackElement value = ExecutorTypeUtils.parse(executionContext, field.value);
+                StackElement value = ExecutorTypeUtils.parse(context, field.value);
                 if (value.isNull()) value = ExecutorTypeUtils.getFieldDefault(ExecutorTypeUtils.typeToStackType(Type.getType(field.desc)));
                 this.fields.put(field, value);
             }

@@ -19,7 +19,6 @@ public interface MethodExecutor {
         return ExceptionUtils.newException(executionContext, Type.getType(InternalError.class), "Stack dump");
     };
 
-
-    ExecutionResult execute(final ExecutionContext executionContext, final ExecutorClass currentClass, final MethodNode currentMethod, final ExecutorObject instance, final StackElement[] arguments);
+    ExecutionResult execute(final ExecutionContext context, final ExecutorClass currentClass, final MethodNode currentMethod, final ExecutorObject instance, final StackElement[] arguments);
 
 }

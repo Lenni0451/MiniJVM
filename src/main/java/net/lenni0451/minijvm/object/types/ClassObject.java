@@ -9,8 +9,8 @@ public class ClassObject extends ExecutorObject {
 
     private final ExecutorClass classType;
 
-    public ClassObject(final ExecutionContext executionContext, final ExecutorClass classType) {
-        super(executionContext, executionContext.getExecutionManager().loadClass(executionContext, Types.CLASS));
+    public ClassObject(final ExecutionContext context, final ExecutorClass classType) {
+        super(context, context.getExecutionManager().loadClass(context, Types.CLASS));
         this.classType = classType;
     }
 

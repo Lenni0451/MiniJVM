@@ -8,12 +8,12 @@ import java.util.Arrays;
 
 public class ExecutorStack {
 
-    private final ExecutionContext executionContext;
+    private final ExecutionContext context;
     private final StackElement[] stack;
     private int stackPointer = 0;
 
-    public ExecutorStack(final ExecutionContext executionContext, final int maxSize) {
-        this.executionContext = executionContext;
+    public ExecutorStack(final ExecutionContext context, final int maxSize) {
+        this.context = context;
         this.stack = new StackElement[maxSize];
     }
 
@@ -28,7 +28,7 @@ public class ExecutorStack {
 
     public void push(final StackElement element) {
         if (this.stackPointer >= this.stack.length) {
-            throw new ExecutorException(this.executionContext, "Tried to push an element to the stack but the stack is full");
+            throw new ExecutorException(this.context, "Tried to push an element to the stack but the stack is full");
         }
         this.stack[this.stackPointer++] = element;
     }
@@ -40,7 +40,7 @@ public class ExecutorStack {
 
     public StackElement pop() {
         if (this.stackPointer == 0) {
-            throw new ExecutorException(this.executionContext, "Tried to pop an element from an empty stack");
+            throw new ExecutorException(this.context, "Tried to pop an element from an empty stack");
         }
         StackElement previous = this.stack[--this.stackPointer];
         this.stack[this.stackPointer] = null;
@@ -50,7 +50,7 @@ public class ExecutorStack {
     public StackElement popSized() {
         StackElement element = this.pop();
         if (element.size() == 2 && this.pop() != element) {
-            throw new ExecutorException(this.executionContext, "Tried to pop an element from the stack with a size of " + element.size() + " but the stack contains an element of different type");
+            throw new ExecutorException(this.context, "Tried to pop an element from the stack with a size of " + element.size() + " but the stack contains an element of different type");
         }
         return element;
     }
@@ -58,21 +58,21 @@ public class ExecutorStack {
     public <T extends StackElement> T popSized(final Class<T> expected) {
         StackElement element = this.popSized();
         if (!expected.isInstance(element)) {
-            throw new ExecutorException(this.executionContext, "Tried to pop " + expected.getSimpleName() + " but the top element is " + element.getClass().getSimpleName());
+            throw new ExecutorException(this.context, "Tried to pop " + expected.getSimpleName() + " but the top element is " + element.getClass().getSimpleName());
         }
         return (T) element;
     }
 
     public StackElement peek() {
         if (this.stackPointer == 0) {
-            throw new ExecutorException(this.executionContext, "Tried to peek an element from an empty stack");
+            throw new ExecutorException(this.context, "Tried to peek an element from an empty stack");
         }
         return this.stack[this.stackPointer - 1];
     }
 
     public void swap() {
         if (this.stackPointer < 2) {
-            throw new ExecutorException(this.executionContext, "Tried to swap the top two elements of the stack but the stack size is smaller than 2");
+            throw new ExecutorException(this.context, "Tried to swap the top two elements of the stack but the stack size is smaller than 2");
         }
         StackElement first = this.pop();
         StackElement second = this.pop();
@@ -82,14 +82,14 @@ public class ExecutorStack {
 
     public void dup() {
         if (this.stackPointer == 0) {
-            throw new ExecutorException(this.executionContext, "Tried to duplicate the top element of the stack but the stack is empty");
+            throw new ExecutorException(this.context, "Tried to duplicate the top element of the stack but the stack is empty");
         }
         this.push(this.peek());
     }
 
     public void dupX1() {
         if (this.stackPointer < 2) {
-            throw new ExecutorException(this.executionContext, "Tried to duplicate the top element of the stack and insert it below the second element but the stack size is smaller than 2");
+            throw new ExecutorException(this.context, "Tried to duplicate the top element of the stack and insert it below the second element but the stack size is smaller than 2");
         }
         StackElement first = this.pop();
         StackElement second = this.pop();
@@ -100,7 +100,7 @@ public class ExecutorStack {
 
     public void dupX2() {
         if (this.stackPointer < 3) {
-            throw new ExecutorException(this.executionContext, "Tried to duplicate the top element of the stack and insert it below the third element but the stack size is smaller than 3");
+            throw new ExecutorException(this.context, "Tried to duplicate the top element of the stack and insert it below the third element but the stack size is smaller than 3");
         }
         StackElement first = this.pop();
         StackElement second = this.pop();
@@ -113,7 +113,7 @@ public class ExecutorStack {
 
     public void dup2() {
         if (this.stackPointer < 2) {
-            throw new ExecutorException(this.executionContext, "Tried to duplicate the top two elements of the stack but the stack size is smaller than 2");
+            throw new ExecutorException(this.context, "Tried to duplicate the top two elements of the stack but the stack size is smaller than 2");
         }
         StackElement first = this.pop();
         StackElement second = this.pop();
@@ -125,7 +125,7 @@ public class ExecutorStack {
 
     public void dup2X1() {
         if (this.stackPointer < 3) {
-            throw new ExecutorException(this.executionContext, "Tried to duplicate the top two elements of the stack and insert them below the third element but the stack size is smaller than 3");
+            throw new ExecutorException(this.context, "Tried to duplicate the top two elements of the stack and insert them below the third element but the stack size is smaller than 3");
         }
         StackElement first = this.pop();
         StackElement second = this.pop();
@@ -139,7 +139,7 @@ public class ExecutorStack {
 
     public void dup2X2() {
         if (this.stackPointer < 4) {
-            throw new ExecutorException(this.executionContext, "Tried to duplicate the top two elements of the stack and insert them below the fourth element but the stack size is smaller than 4");
+            throw new ExecutorException(this.context, "Tried to duplicate the top two elements of the stack and insert them below the fourth element but the stack size is smaller than 4");
         }
         StackElement first = this.pop();
         StackElement second = this.pop();

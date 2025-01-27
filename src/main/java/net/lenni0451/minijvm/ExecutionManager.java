@@ -88,18 +88,18 @@ public class ExecutionManager {
         this.methodExecutors.put(classMethodDescriptor, methodExecutor);
     }
 
-    public MethodExecutor getMethodExecutor(final ExecutionContext executionContext, final String owner, final MethodNode methodNode) {
+    public MethodExecutor getMethodExecutor(final ExecutionContext context, final String owner, final MethodNode methodNode) {
         MethodExecutor methodExecutor = this.methodExecutors.get(owner + "." + methodNode.name + methodNode.desc);
         if (methodExecutor != null) return methodExecutor;
         if (Modifiers.has(methodNode.access, Opcodes.ACC_NATIVE)) {
-            throw new ExecutorException(executionContext, "Native method not implemented: " + owner + "." + methodNode.name + methodNode.desc);
+            throw new ExecutorException(context, "Native method not implemented: " + owner + "." + methodNode.name + methodNode.desc);
         } else {
             return this.methodExecutors.get(null);
         }
     }
 
     @SneakyThrows //TODO: Actually handle if classes can't be loaded
-    public synchronized ExecutorClass loadClass(final ExecutionContext executionContext, final Type type) {
+    public synchronized ExecutorClass loadClass(final ExecutionContext context, final Type type) {
         ExecutorClass loadedClass = this.loadedClasses.get(type);
         if (loadedClass != null) return loadedClass;
 
@@ -109,7 +109,7 @@ public class ExecutionManager {
             classNode.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL, type.getClassName(), null, null, null);
         } else if (type.getSort() == Type.ARRAY) {
             if (type.getElementType().equals(Type.VOID_TYPE)) {
-                throw new ExecutorException(executionContext, "Invalid array element type: " + type.getElementType());
+                throw new ExecutorException(context, "Invalid array element type: " + type.getElementType());
             }
 
             classNode = new ClassNode();
@@ -118,44 +118,44 @@ public class ExecutionManager {
             classNode = this.classPool.getClassNode(type.getInternalName());
             if (classNode == null) throw new ClassNotFoundException(type.getClassName());
         } else {
-            throw new ExecutorException(executionContext, "Unsupported type: " + type.getSort() + " (" + type + ")");
+            throw new ExecutorException(context, "Unsupported type: " + type.getSort() + " (" + type + ")");
         }
-        ExecutorClass executorClass = new ExecutorClass(executionContext, type, classNode);
+        ExecutorClass executorClass = new ExecutorClass(context, type, classNode);
         this.loadedClasses.put(type, executorClass);
         return executorClass;
     }
 
-    public synchronized ExecutorObject instantiateClass(final ExecutionContext executionContext, final ExecutorClass executorClass) {
+    public synchronized ExecutorObject instantiateClass(final ExecutionContext context, final ExecutorClass executorClass) {
         ExecutorObject instantiatedClass = this.classInstances.get(executorClass);
         if (instantiatedClass != null) return instantiatedClass;
 
-        ExecutorObject classInstance = new ClassObject(executionContext, executorClass);
+        ExecutorObject classInstance = new ClassObject(context, executorClass);
         { //Component type
-            ExecutorClass.ResolvedField componentTypeField = classInstance.getClazz().findField(executionContext, "componentType", "Ljava/lang/Class;");
+            ExecutorClass.ResolvedField componentTypeField = classInstance.getClazz().findField(context, "componentType", "Ljava/lang/Class;");
             if (componentTypeField != null) {
                 if (executorClass.getType().getSort() == Type.ARRAY) {
-                    ExecutorClass componentTypeClass = this.loadClass(executionContext, Types.arrayType(executorClass.getType()));
-                    classInstance.setField(componentTypeField.field(), new StackObject(this.instantiateClass(executionContext, componentTypeClass)));
+                    ExecutorClass componentTypeClass = this.loadClass(context, Types.arrayType(executorClass.getType()));
+                    classInstance.setField(componentTypeField.field(), new StackObject(this.instantiateClass(context, componentTypeClass)));
                 } else {
                     classInstance.setField(componentTypeField.field(), StackObject.NULL);
                 }
             }
         }
         { //Name
-            ExecutorClass.ResolvedField nameField = classInstance.getClazz().findField(executionContext, "name", "Ljava/lang/String;");
+            ExecutorClass.ResolvedField nameField = classInstance.getClazz().findField(context, "name", "Ljava/lang/String;");
             if (nameField != null) {
-                classInstance.setField(nameField.field(), ExecutorTypeUtils.parse(executionContext, executorClass.getClassNode().name));
+                classInstance.setField(nameField.field(), ExecutorTypeUtils.parse(context, executorClass.getClassNode().name));
             }
         }
         this.classInstances.put(executorClass, classInstance);
         return classInstance;
     }
 
-    public ExecutorObject instantiate(final ExecutionContext executionContext, final ExecutorClass executorClass) {
-        return new ExecutorObject(executionContext, executorClass);
+    public ExecutorObject instantiate(final ExecutionContext context, final ExecutorClass executorClass) {
+        return new ExecutorObject(context, executorClass);
     }
 
-    public ExecutorObject instantiateArray(final ExecutionContext executionContext, final ExecutorClass executorClass, final int length) {
+    public ExecutorObject instantiateArray(final ExecutionContext context, final ExecutorClass executorClass, final int length) {
         IntFunction<StackElement> initializer = switch (executorClass.getType().getSort()) {
             case Type.BOOLEAN -> i -> StackInt.ZERO;
             case Type.CHAR -> i -> StackInt.ZERO;
@@ -167,21 +167,21 @@ public class ExecutionManager {
             case Type.DOUBLE -> i -> StackDouble.ZERO;
             default -> i -> StackObject.NULL;
         };
-        return this.instantiateArray(executionContext, executorClass, length, initializer);
+        return this.instantiateArray(context, executorClass, length, initializer);
     }
 
-    public ExecutorObject instantiateArray(final ExecutionContext executionContext, final ExecutorClass executorClass, final StackElement[] elements) {
-        return this.instantiateArray(executionContext, executorClass, elements.length, i -> elements[i]);
+    public ExecutorObject instantiateArray(final ExecutionContext context, final ExecutorClass executorClass, final StackElement[] elements) {
+        return this.instantiateArray(context, executorClass, elements.length, i -> elements[i]);
     }
 
-    public ArrayObject instantiateArray(final ExecutionContext executionContext, final ExecutorClass executorClass, final int length, final IntFunction<StackElement> elementSupplier) {
+    public ArrayObject instantiateArray(final ExecutionContext context, final ExecutorClass executorClass, final int length, final IntFunction<StackElement> elementSupplier) {
         if (executorClass.getType().getSort() != Type.ARRAY) {
-            throw new ExecutorException(executionContext, "Class is not an array: " + executorClass.getType());
+            throw new ExecutorException(context, "Class is not an array: " + executorClass.getType());
         }
 
         StackElement[] elements = new StackElement[length];
         for (int i = 0; i < length; i++) elements[i] = elementSupplier.apply(i);
-        return new ArrayObject(executionContext, executorClass, elements);
+        return new ArrayObject(context, executorClass, elements);
     }
 
 }

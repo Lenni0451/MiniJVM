@@ -31,14 +31,14 @@ public class ExecutorClass {
     private final Map<FieldNode, StackElement> staticFields;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
 
-    public ExecutorClass(final ExecutionContext executionContext, final Type type, final ClassNode classNode) {
+    public ExecutorClass(final ExecutionContext context, final Type type, final ClassNode classNode) {
         this.type = type;
         this.classNode = classNode;
         this.superClasses = new LinkedHashMap<>();
         this.staticFields = new HashMap<>();
 
-        this.initSuperClasses(executionContext);
-        this.initFields(executionContext);
+        this.initSuperClasses(context);
+        this.initFields(context);
     }
 
     public Type getType() {
@@ -50,7 +50,7 @@ public class ExecutorClass {
     }
 
     @SneakyThrows
-    private void initSuperClasses(final ExecutionContext executionContext) {
+    private void initSuperClasses(final ExecutionContext context) {
         Stack<ExecutorClass> stack = new Stack<>();
         stack.push(this);
         while (!stack.isEmpty()) {
@@ -58,44 +58,44 @@ public class ExecutorClass {
             if (this.superClasses.containsKey(current.classNode.name)) continue;
             this.superClasses.put(current.classNode.name, current);
             for (String itf : current.classNode.interfaces) {
-                stack.push(executionContext.getExecutionManager().loadClass(executionContext, Type.getObjectType(itf)));
+                stack.push(context.getExecutionManager().loadClass(context, Type.getObjectType(itf)));
             }
             if (current.classNode.superName != null) {
-                stack.push(executionContext.getExecutionManager().loadClass(executionContext, Type.getObjectType(current.classNode.superName)));
+                stack.push(context.getExecutionManager().loadClass(context, Type.getObjectType(current.classNode.superName)));
             }
         }
     }
 
-    private void initFields(final ExecutionContext executionContext) {
+    private void initFields(final ExecutionContext context) {
         for (FieldNode field : this.classNode.fields) {
             if (Modifiers.has(field.access, Opcodes.ACC_STATIC)) {
-                StackElement value = ExecutorTypeUtils.parse(executionContext, field.value);
+                StackElement value = ExecutorTypeUtils.parse(context, field.value);
                 if (value.isNull()) value = ExecutorTypeUtils.getFieldDefault(ExecutorTypeUtils.typeToStackType(Type.getType(field.desc)));
                 this.staticFields.put(field, value);
             }
         }
     }
 
-    public void invokeStaticInit(final ExecutionContext executionContext) {
+    public void invokeStaticInit(final ExecutionContext context) {
         if (!this.initialized.compareAndSet(false, true)) return;
         for (MethodNode method : this.classNode.methods) {
             if (Modifiers.has(method.access, Opcodes.ACC_STATIC) && method.name.equals("<clinit>")) {
-                ExecutionResult result = Executor.execute(executionContext, this, method, null);
-                if (result.hasException()) throw new ExecutorException(executionContext, "Could not execute static initializer of " + this.classNode.name, result.getException());
+                ExecutionResult result = Executor.execute(context, this, method, null);
+                if (result.hasException()) throw new ExecutorException(context, "Could not execute static initializer of " + this.classNode.name, result.getException());
             }
         }
-        for (ExecutorClass superClass : this.superClasses.values()) superClass.invokeStaticInit(executionContext);
+        for (ExecutorClass superClass : this.superClasses.values()) superClass.invokeStaticInit(context);
     }
 
-    public boolean isInstance(final ExecutionContext executionContext, final Type type) {
+    public boolean isInstance(final ExecutionContext context, final Type type) {
         if (this.type.getSort() == Type.ARRAY && type.getSort() == Type.ARRAY) {
             if (type.getElementType().equals(Types.OBJECT)) {
                 return this.type.getDimensions() >= type.getDimensions();
             } else if (this.type.getDimensions() != type.getDimensions()) {
                 return false;
             } else {
-                ExecutorClass elementClass = executionContext.getExecutionManager().loadClass(executionContext, this.type.getElementType());
-                return elementClass.isInstance(executionContext, type.getElementType());
+                ExecutorClass elementClass = context.getExecutionManager().loadClass(context, this.type.getElementType());
+                return elementClass.isInstance(context, type.getElementType());
             }
         }
         String name = type.getInternalName();
@@ -104,8 +104,8 @@ public class ExecutorClass {
     }
 
     @Nullable
-    public ResolvedField findField(final ExecutionContext executionContext, final String name, final String descriptor) {
-        this.invokeStaticInit(executionContext);
+    public ResolvedField findField(final ExecutionContext context, final String name, final String descriptor) {
+        this.invokeStaticInit(context);
         for (Map.Entry<String, ExecutorClass> entry : this.superClasses.entrySet()) {
             FieldNode field = ASMUtils.getField(entry.getValue().classNode, name, descriptor);
             if (field != null) return new ResolvedField(entry.getValue(), field);
@@ -114,8 +114,8 @@ public class ExecutorClass {
     }
 
     @Nullable
-    public ResolvedMethod findMethod(final ExecutionContext executionContext, final String name, final String descriptor) {
-        this.invokeStaticInit(executionContext);
+    public ResolvedMethod findMethod(final ExecutionContext context, final String name, final String descriptor) {
+        this.invokeStaticInit(context);
         for (Map.Entry<String, ExecutorClass> entry : this.superClasses.entrySet()) {
             MethodNode method = ASMUtils.getMethod(entry.getValue().classNode, name, descriptor);
             if (method != null && !Modifiers.has(method.access, Opcodes.ACC_ABSTRACT)) return new ResolvedMethod(entry.getValue(), method);
