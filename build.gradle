@@ -39,7 +39,7 @@ dependencies {
     compileOnly(annotationProcessor("org.projectlombok:lombok:1.18.38"))
     api "net.lenni0451.commons:asm:1.7.0"
     api "org.ow2.asm:asm:9.7.1"
-    api "org.ow2.asm:asm-commons:9.7.1"
+    api "org.ow2.asm:asm-commons:9.8"
     api "org.ow2.asm:asm-tree:9.8"
     api "org.ow2.asm:asm-analysis:9.7.1"
 }
