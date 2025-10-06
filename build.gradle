@@ -38,10 +38,10 @@ dependencies {
     compileOnly "org.jetbrains:annotations:26.0.2-1"
     compileOnly(annotationProcessor("org.projectlombok:lombok:1.18.42"))
     api "net.lenni0451.commons:asm:1.8.0"
-    api "org.ow2.asm:asm:9.8"
-    api "org.ow2.asm:asm-commons:9.8"
-    api "org.ow2.asm:asm-tree:9.8"
-    api "org.ow2.asm:asm-analysis:9.8"
+    api "org.ow2.asm:asm:9.9"
+    api "org.ow2.asm:asm-commons:9.9"
+    api "org.ow2.asm:asm-tree:9.9"
+    api "org.ow2.asm:asm-analysis:9.9"
 }
 
 java {
